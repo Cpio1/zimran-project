@@ -10,7 +10,7 @@
   --color-brand-600: #17705f;
   --color-brand-700: #125a4c;
 
-  --color-canvas: #f4f7f5;          /* page background: light grey-mint */
+  --color-canvas: #edf5f1;          /* page background: grey-mint */
   --color-surface: #ffffff;         /* cards, fields, dialogs, menus */
   --color-surface-quiet: #fafcfb;   /* supporting cards: opaque, a touch quieter than surface */
   --color-sidebar: #f8faf9;         /* navigation: restrained, below cards in the hierarchy */
@@ -18,9 +18,9 @@
   --color-subtle-strong: #f2f2f0;   /* hover, chips, segmented controls */
   --color-track: #e7e5e4;           /* skeletons, progress tracks */
   --color-track-strong: #d6d3d1;    /* used units in meters */
-  --color-line: #e4e6e3;            /* borders, dividers */
+  --color-line: #dbe5e0;            /* borders, dividers (mint-tinted, visible against the page) */
   --color-ink: #1b1f24;             /* main text */
-  --color-muted: #5d6570;           /* secondary text */
+  --color-muted: #556069;           /* secondary text (≥ 4.5:1 even on the mint glow) */
   --color-placeholder: #6b7079;     /* placeholders (≥ 4.5:1 on surface) */
   --color-accent: #17705f;          /* main button */
   --color-accent-hover: #125a4c;
@@ -40,15 +40,16 @@
   color-scheme: light;
   --backdrop: rgb(15 20 25 / 0.45);
   /* Decorative page background (AppShell's .app-backdrop). */
-  --bg-glow-a: rgb(52 181 151 / 0.16);   /* mint, top right */
-  --bg-glow-b: rgb(96 150 210 / 0.12);   /* soft blue, bottom left */
-  --bg-dot: rgb(27 31 36 / 0.07);        /* dot texture */
+  --bg-glow-a: rgb(63 170 131 / 0.22);   /* mint, top right */
+  --bg-glow-b: rgb(70 150 175 / 0.18);   /* blue-green, bottom left */
+  --bg-ring: rgb(31 138 118 / 0.20);     /* thin arcs at the edges */
+  --bg-dot: rgb(27 60 48 / 0.07);        /* dot texture */
   --bg-dot-step: 30px;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   /* Deep neutral page, slightly lighter surfaces (lighter = higher), soft borders. */
-  --color-canvas: #0d1311;
+  --color-canvas: #0b1412;
   --color-surface: #171d1b;
   --color-surface-quiet: #141a18;
   --color-sidebar: #111715;
@@ -90,20 +91,22 @@
   --color-sky-800: #9fd2f2;
   --color-sky-900: #c8e6f9;
   /* Shadows read on dark only when deeper; surfaces also get lighter as they rise. */
-  --elev-1: 0 1px 2px rgb(0 0 0 / 0.35);
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 18px -10px rgb(0 0 0 / 0.6);
+  --elev-0: 0 1px 2px rgb(0 0 0 / 0.3);
   --elev-2: 0 8px 20px -6px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
   --elev-2-up: 0 -6px 16px -8px rgb(0 0 0 / 0.6);
   --elev-3: 0 28px 60px -12px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.04);
   --backdrop: rgb(0 0 0 / 0.62);
-  --bg-glow-a: rgb(46 166 140 / 0.10);
-  --bg-glow-b: rgb(70 120 170 / 0.08);
-  --bg-dot: rgb(255 255 255 / 0.04);
+  --bg-glow-a: rgb(63 170 131 / 0.24);
+  --bg-glow-b: rgb(60 130 160 / 0.18);
+  --bg-ring: rgb(127 217 194 / 0.17);
+  --bg-dot: rgb(255 255 255 / 0.045);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
   color-scheme: dark;
   /* Deep neutral page, slightly lighter surfaces (lighter = higher), soft borders. */
-  --color-canvas: #0d1311;
+  --color-canvas: #0b1412;
   --color-surface: #171d1b;
   --color-surface-quiet: #141a18;
   --color-sidebar: #111715;
@@ -145,29 +148,50 @@
   --color-sky-800: #9fd2f2;
   --color-sky-900: #c8e6f9;
   /* Shadows read on dark only when deeper; surfaces also get lighter as they rise. */
-  --elev-1: 0 1px 2px rgb(0 0 0 / 0.35);
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 18px -10px rgb(0 0 0 / 0.6);
+  --elev-0: 0 1px 2px rgb(0 0 0 / 0.3);
   --elev-2: 0 8px 20px -6px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
   --elev-2-up: 0 -6px 16px -8px rgb(0 0 0 / 0.6);
   --elev-3: 0 28px 60px -12px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.04);
   --backdrop: rgb(0 0 0 / 0.62);
-  --bg-glow-a: rgb(46 166 140 / 0.10);
-  --bg-glow-b: rgb(70 120 170 / 0.08);
-  --bg-dot: rgb(255 255 255 / 0.04);
+  --bg-glow-a: rgb(63 170 131 / 0.24);
+  --bg-glow-b: rgb(60 130 160 / 0.18);
+  --bg-ring: rgb(127 217 194 / 0.17);
+  --bg-dot: rgb(255 255 255 / 0.045);
   }
 }
 /* ── Page backdrop ─────────────────────────────────────────────────────────────────────────
-   One static layer behind everything (AppShell renders it with aria-hidden): two large, soft
-   radial glows at the edges of the work area and a very faint dot grid. The dots are masked out
-   in the middle column, so they read mostly in free space; cards and forms are opaque and sit
-   on top with soft borders and small shadows. Nothing here animates or takes pointer events. */
+   One static layer behind everything (AppShell renders it with aria-hidden, no pointer events):
+     • two large radial glows: mint at the top right, blue-green at the bottom left;
+     • thin partial rings: concentric circles centred just outside the corners, so only their
+       arcs show at the edges of the work area;
+     • a faint dot grid, masked out over the central column so it reads in free space.
+   On wider screens the layer starts at the work area (after the 15 rem sidebar), so the arcs
+   aren't hidden under the navigation. Cards and forms stay opaque on top, with borders and
+   shadows. Nothing here animates. */
 .app-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  overflow: hidden;
   background:
-    radial-gradient(ellipse 60% 55% at 100% 0%, var(--bg-glow-a), transparent 70%),
-    radial-gradient(ellipse 55% 50% at 0% 100%, var(--bg-glow-b), transparent 70%);
+    /* rings, top right: three arcs */
+    radial-gradient(circle at 104% -6%,
+      transparent 259px, var(--bg-ring) 260px, var(--bg-ring) 261.5px, transparent 262.5px,
+      transparent 359px, var(--bg-ring) 360px, var(--bg-ring) 361.5px, transparent 362.5px,
+      transparent 479px, var(--bg-ring) 480px, var(--bg-ring) 481.5px, transparent 482.5px),
+    /* rings, bottom left: two arcs */
+    radial-gradient(circle at -4% 106%,
+      transparent 219px, var(--bg-ring) 220px, var(--bg-ring) 221.5px, transparent 222.5px,
+      transparent 329px, var(--bg-ring) 330px, var(--bg-ring) 331.5px, transparent 332.5px),
+    radial-gradient(ellipse 70% 75% at 100% 0%, var(--bg-glow-a), transparent 72%),
+    radial-gradient(ellipse 65% 70% at 0% 100%, var(--bg-glow-b), transparent 72%);
+}
+@media (min-width: 768px) {
+  .app-backdrop {
+    left: 15rem;
+  }
 }
 .app-backdrop::before {
   content: "";
@@ -175,13 +199,19 @@
   inset: 0;
   background-image: radial-gradient(circle at center, var(--bg-dot) 1px, transparent 1.5px);
   background-size: var(--bg-dot-step) var(--bg-dot-step);
-  -webkit-mask-image: radial-gradient(ellipse 55% 60% at 55% 45%, transparent 35%, #000 90%);
-  mask-image: radial-gradient(ellipse 55% 60% at 55% 45%, transparent 35%, #000 90%);
+  -webkit-mask-image: radial-gradient(ellipse 50% 55% at 50% 42%, transparent 40%, #000 92%);
+  mask-image: radial-gradient(ellipse 50% 55% at 50% 42%, transparent 40%, #000 92%);
 }
-/* Phones: the content fills the width, so the decoration steps further back. */
+/* Phones: fewer contours — one arc per corner, smaller radii — and a lighter dot grid. */
 @media (max-width: 767px) {
   .app-backdrop {
-    opacity: 0.6;
+    background:
+      radial-gradient(circle at 108% -4%,
+        transparent 179px, var(--bg-ring) 180px, var(--bg-ring) 181.5px, transparent 182.5px),
+      radial-gradient(circle at -8% 104%,
+        transparent 159px, var(--bg-ring) 160px, var(--bg-ring) 161.5px, transparent 162.5px),
+      radial-gradient(ellipse 90% 55% at 100% 0%, var(--bg-glow-a), transparent 72%),
+      radial-gradient(ellipse 90% 50% at 0% 100%, var(--bg-glow-b), transparent 72%);
   }
   .app-backdrop::before {
     opacity: 0.6;
@@ -196,11 +226,14 @@
 }
 
 html {
+  /* The base colour is the root canvas; the decorative layer (z-index -1) paints above it and
+     below everything else. body stays transparent so nothing can cover the decoration. */
+  background: var(--color-canvas);
   -webkit-text-size-adjust: 100%;
   accent-color: var(--color-accent); /* native checkboxes, radios, ranges */
 }
 body {
-  background: var(--color-canvas);
+  background: transparent;
   color: var(--color-ink);
   font-family: var(--font-sans);
   overflow-x: hidden;
@@ -547,7 +580,7 @@ summary.details-summary::-webkit-details-marker {
 .select-native {
   -webkit-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235d6570' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23556069' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1rem;
@@ -570,7 +603,8 @@ summary.details-summary::-webkit-details-marker {
    over content → 3 dialogs above a dimmed page. Shadows are soft and short so nothing looks
    heavy, and sticky bars keep a solid background so content scrolling under them stays calm. */
 :root {
-  --elev-1: 0 1px 2px rgb(27 31 36 / 0.04), 0 1px 1px rgb(27 31 36 / 0.02);
+  --elev-1: 0 1px 2px rgb(16 48 38 / 0.06), 0 6px 16px -8px rgb(16 48 38 / 0.14);
+  --elev-0: 0 1px 2px rgb(16 48 38 / 0.05);
   --elev-2: 0 4px 12px -2px rgb(27 31 36 / 0.10), 0 2px 4px -2px rgb(27 31 36 / 0.06);
   --elev-2-up: 0 -4px 12px -6px rgb(27 31 36 / 0.10);
   --elev-3: 0 24px 48px -12px rgb(27 31 36 / 0.28), 0 8px 16px -8px rgb(27 31 36 / 0.12);
@@ -580,7 +614,7 @@ summary.details-summary::-webkit-details-marker {
 .elev-2-up { box-shadow: var(--elev-2-up); }
 .elev-3 { box-shadow: var(--elev-3); }
 [data-tone="default"] { box-shadow: var(--elev-1); }
-[data-tone="quiet"] { box-shadow: none; }
+[data-tone="quiet"] { box-shadow: var(--elev-0); }
 
 /* ── Hit areas (Fitts) ──────────────────────────────────────────────────────────────────
    .hit-y   — a compact control (32 px) gets an invisible 44 px tall target; width is left
