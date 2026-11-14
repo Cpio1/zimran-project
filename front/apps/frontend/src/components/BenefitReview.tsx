@@ -81,7 +81,7 @@ export function BenefitReviewCard({ b, active }: { b: Benefit; active?: boolean 
           <Badge tone="brand">{BENEFIT_TYPE_LABEL[b.type]}</Badge>
           {b.needs_review && <NeedsReview />}
         </div>
-        <h3 className="text-lg font-semibold leading-snug"><Link href={`/benefits/${b.id}`} className="hover:underline">{b.title}</Link></h3>
+        <h3 className="text-lg font-semibold leading-snug [overflow-wrap:anywhere]"><Link href={`/benefits/${b.id}`} className="hover:underline">{b.title}</Link></h3>
         {b.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{b.description}</p>}
       </div>
       <dl className="grid gap-4 text-sm sm:grid-cols-2">

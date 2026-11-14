@@ -94,3 +94,36 @@ test("motion: pose-to-pose sequences, and reduced motion swaps them for a short 
   const t = await btn.locator(".squish-surface").evaluate((el) => getComputedStyle(el).transform);
   expect(t === "none" || t === "matrix(1, 0, 0, 1, 0, 0)").toBeTruthy();
 });
+
+test("secondary action: a confirmed upload gets its check", async ({ page }) => {
+  await uploadSample(page);
+  await expect(page.getByText("Uploaded", { exact: true })).toBeVisible();
+});
+
+test("errors: text, border and icon", async ({ page }) => {
+  await uploadSample(page);
+  await page.getByRole("link", { name: "Review results" }).click();
+  await page.getByRole("link", { name: "Four dental cleaning services" }).click();
+  await page.getByRole("button", { name: "Mark used" }).click();
+  const input = page.getByLabel("Total used so far");
+  await input.fill("9");
+  await expect(page.getByRole("alert").filter({ hasText: "Enter a whole number from 0 to 4." })).toBeVisible();
+  await expect(input).toHaveAttribute("aria-invalid", "true");
+  const border = await input.evaluate((el) => getComputedStyle(el).borderTopColor);
+  expect(border).toMatch(/rgba?\(220, 38, 38/);
+  await expect(page.getByRole("alert").locator("svg")).toHaveCount(1);
+});
+
+test("motion: independent transform channels don't cancel each other", async ({ page }) => {
+  await page.goto("/");
+  const surface = page.locator('main [data-variant="primary"] .squish-surface').first();
+  const style = await surface.evaluate((el) => {
+    el.parentElement!.setAttribute("data-pressed", "");
+    el.parentElement!.setAttribute("data-stage-cue", "");
+    const cs = getComputedStyle(el);
+    return { anim: cs.animationName, transition: cs.transitionProperty };
+  });
+  // The cue animates `scale`; the press transitions `transform`: both can run at once.
+  expect(style.anim).toContain("stage-cue");
+  expect(style.transition).toContain("transform");
+});

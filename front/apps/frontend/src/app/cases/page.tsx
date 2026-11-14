@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArrowRight, CheckCircle2, Clock, FolderKanban, Plus } from "lucide-react";
@@ -13,9 +13,16 @@ import { USER_TURN } from "@/components/case/Sections";
 import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, ListSkeleton, Modal, PageHeader, Select, Textarea } from "@/components/ui";
 import { CASE_NEXT_STEP, CASE_STATUS_LABEL, CASE_TYPE_LABEL, CATEGORY_LABEL, formatDate } from "@/lib/format";
 import { invalidate, qk, useAllEntries } from "@/lib/hooks";
+import { useUrlState } from "@/lib/useUrlState";
 
 export default function CasesPage() {
-  const [status, setStatus] = useState<CaseStatus | "">("");
+  return <Suspense><CasesInner /></Suspense>;
+}
+
+function CasesInner() {
+  const [statusRaw, setStatusRaw] = useUrlState("stage");
+  const status = ((CASE_STATUSES as readonly string[]).includes(statusRaw) ? statusRaw : "") as CaseStatus | "";
+  const setStatus = (s: CaseStatus | "") => setStatusRaw(s);
   const [newOpen, setNewOpen] = useState(false);
   const list = useQuery({ queryKey: qk.cases({ status, all: true }), queryFn: () => listAll((cursor) => api.listCases({ status: status || undefined, cursor, limit: 100 })) });
 
@@ -30,7 +37,7 @@ export default function CasesPage() {
       <div role="tablist" aria-label="Stage" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         {(["", ...CASE_STATUSES] as const).map((s) => (
           <button key={s || "all"} role="tab" aria-selected={status === s} type="button" onClick={() => setStatus(s)}
-            className={clsx("shrink-0 rounded-full px-3 py-1.5 text-sm", status === s ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink")}>
+            className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", status === s ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink")}>
             {s ? CASE_STATUS_LABEL[s] : "All"}
           </button>
         ))}
@@ -52,7 +59,7 @@ export default function CasesPage() {
                     <Badge tone={yours ? "brand" : "neutral"}>{CASE_STATUS_LABEL[c.status]}</Badge>
                     <Badge>{CASE_TYPE_LABEL[c.type]}</Badge>
                   </div>
-                  <h2 className="font-semibold">{c.title}</h2>
+                  <h2 className="font-semibold [overflow-wrap:anywhere]">{c.title}</h2>
                   {/* Staging: the next step is the line to act on when it's the user's turn. */}
                   <p className={clsx("mt-1 flex items-start gap-1.5 text-sm", yours ? "font-medium text-brand-700" : "text-muted")}>
                     {yours ? <ArrowRight data-anticipate="right" className="mt-0.5 size-4 shrink-0" aria-hidden />

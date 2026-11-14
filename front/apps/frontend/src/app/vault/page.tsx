@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Archive, Search, Upload } from "lucide-react";
 import { api } from "@/api/client";
@@ -10,10 +10,15 @@ import { entryNeedsReview } from "@/components/Entry";
 import { Badge, Button, ButtonLink, Card, EmptyState, ErrorBox, Input, ListSkeleton, NeedsReview, PageHeader, Select } from "@/components/ui";
 import { CATEGORY_LABEL, formatDate } from "@/lib/format";
 import { useDebounced } from "@/lib/useDebounced";
+import { useUrlState } from "@/lib/useUrlState";
 
 export default function VaultPage() {
-  const [q, setQ] = useState("");
-  const [category, setCategory] = useState("");
+  return <Suspense><VaultInner /></Suspense>;
+}
+
+function VaultInner() {
+  const [q, setQ] = useUrlState("q", "", 250);
+  const [category, setCategory] = useUrlState("type");
   const dq = useDebounced(q.trim());
   const list = useInfiniteQuery({
     queryKey: ["entries", { q: dq, category, infinite: true }],
@@ -54,7 +59,7 @@ export default function VaultPage() {
                   <Badge>{CATEGORY_LABEL[e.category]}</Badge>
                   {entryNeedsReview(e) && <NeedsReview />}
                 </div>
-                <h2 className="font-semibold leading-snug">{e.title}</h2>
+                <h2 className="font-semibold leading-snug [overflow-wrap:anywhere]">{e.title}</h2>
                 {(e.provider || e.subject) && <p className="text-sm text-muted">{[e.provider, e.subject].filter(Boolean).join(" · ")}</p>}
                 <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-1 text-xs text-muted">
                   <span>{e.benefit_ids.length} benefit{e.benefit_ids.length === 1 ? "" : "s"}</span>

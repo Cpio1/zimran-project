@@ -18,17 +18,29 @@ import { CheckCircle2, type LucideIcon } from "lucide-react";
  * transitions retarget from the in-flight value), so rapid repeated taps never jump.
  */
 const SELECTOR = "[data-squish]";
-const MIN_PRESS_MS = 90;
-/** Longest anticipation keyframe (globals.css) plus slack; the play flag is cleared after it. */
-const ANTICIPATE_MS = 340;
+/** Shortest visible press (--dur-press in globals.css). */
+const MIN_PRESS_MS = 80;
+/** Anticipation nudge length (--dur-nudge) plus slack; the play flag is cleared after it. */
+const ANTICIPATE_MS = 300;
 
 /**
  * Anticipation: icons marked `data-anticipate="left|right|up"` inside a pressable control play a
- * one-shot "step back, then go" nudge (~75 ms wind-up, ~215 ms main move). It only decorates the
+ * one-shot "step back, then go" nudge (260 ms in all: ~70 ms wind-up, main move, follow-through). It only decorates the
  * action — the click handler, request or navigation runs at once and is never delayed.
  * A nudge that is still playing is not restarted, so rapid taps don't make the arrow jitter.
  */
+/**
+ * Frequency of use: a control pressed again within this window (sending several chat messages,
+ * paging through a list) keeps the press squash but skips the nudge, so repeated actions stay calm.
+ */
+const REPEAT_QUIET_MS = 1500;
+const lastNudge = new WeakMap<HTMLElement, number>();
+
 function anticipate(el: HTMLElement) {
+  const now = performance.now();
+  const last = lastNudge.get(el);
+  lastNudge.set(el, now);
+  if (last !== undefined && now - last < REPEAT_QUIET_MS) return;
   const targets = el.matches("[data-anticipate]") ? [el] : Array.from(el.querySelectorAll<HTMLElement>("[data-anticipate]"));
   for (const t of targets) {
     if (t.hasAttribute("data-anticipate-play")) continue;
@@ -132,14 +144,37 @@ export function PressFeedback() {
   return null;
 }
 
+/** Confirmation length (--dur-confirm in globals.css). */
+export const CONFIRM_MS = 280;
+
 /**
- * Success check: smaller → slightly past full size → settle (.squish-pop). Render it only once
- * the operation is confirmed; the sequence plays when the icon mounts, so a new success (a new
- * mount) restarts it. `afterMs` holds the first pose until a surrounding entrance has finished,
- * keeping one movement at a time.
+ * Confirmation mark: grows from 0.85 to 1.05, springs back to 1 (follow-through), and a soft
+ * disc of its own colour flashes behind it for extra contrast (.squish-pop + .status-confirm).
+ * Render it only once the operation is confirmed; a new mount restarts it, so a repeated success
+ * plays again. `afterMs` holds the first pose until a surrounding entrance has finished.
  */
 export function SuccessIcon({ icon: Icon = CheckCircle2, className, afterMs }: { icon?: LucideIcon; className?: string; afterMs?: number }) {
-  return <Icon className={clsx("squish-pop shrink-0", className)} style={afterMs ? { animationDelay: `${afterMs}ms` } : undefined} aria-hidden />;
+  const delay = afterMs ? { animationDelay: `${afterMs}ms` } : undefined;
+  return (
+    <span className="status-confirm" style={delay}>
+      <Icon className={clsx("squish-pop shrink-0", className)} style={delay} aria-hidden />
+    </span>
+  );
+}
+
+/**
+ * Secondary action: returns true for `ms` after `confirm()` is called, e.g. to swap a button's
+ * icon to a check after a confirmed copy. Calling it again while it shows restarts the window
+ * (and the caller remounts the icon, which restarts its pop).
+ */
+export function useConfirmFlash(ms = 1200) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!n) return;
+    const t = window.setTimeout(() => setN(0), ms);
+    return () => window.clearTimeout(t);
+  }, [n, ms]);
+  return { shown: n > 0, key: n, confirm: () => setN((x) => x + 1) };
 }
 
 /**
@@ -152,7 +187,7 @@ export function SuccessIcon({ icon: Icon = CheckCircle2, className, afterMs }: {
  *     context never has two elements competing for attention.
  *   - `delayMs` lets a cue wait for an earlier pose to finish (e.g. a success check popping in).
  */
-const CUE_MS = 900;
+const CUE_MS = 280; // --dur-cue
 let cueBusyUntil = 0;
 export function useStageCue(active: boolean, delayMs = 0) {
   const [play, setPlay] = useState(false);

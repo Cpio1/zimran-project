@@ -42,25 +42,35 @@ export default function BenefitPage() {
           </span>
         }
       />
+      {/* Miller: one block per question — what it is, how much is left, until when, on what
+          terms, says who, and what to do next. Each action sits beside the facts it changes. */}
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div className="flex min-w-0 flex-col gap-5">
-          <Card className="flex flex-col gap-4 p-4">
+          <Card aria-labelledby="h-what" className="flex flex-col gap-2 p-4">
+            <h2 id="h-what" className="text-xs font-medium uppercase tracking-wide text-muted">What you get</h2>
             <p className="text-sm">{x.description}</p>
-            <UsageNumbers b={x} />
-            {x.usage_state === "unknown" && (
-              <Notice tone="warn" title="Usage not confirmed">Claimly can&apos;t see past use. Tell it how many you&apos;ve used — this isn&apos;t assumed to be zero.</Notice>
-            )}
             {value && <p className="text-sm">Stated value: <strong>{value}</strong> <span className="text-muted">— printed on the document, not cash.</span></p>}
-            <BenefitActions b={x} />
           </Card>
 
-          <Card className="flex flex-col gap-3 p-4">
-            <SectionTitle title="Terms" />
+          <div className="grid gap-5 xl:grid-cols-2">
+            <Card aria-labelledby="h-limit" className="flex flex-col gap-3 p-4">
+              <h2 id="h-limit" className="text-xs font-medium uppercase tracking-wide text-muted">Limit</h2>
+              <UsageNumbers b={x} />
+              {x.usage_state === "unknown" && (
+                <Notice tone="warn" title="Usage not confirmed">Claimly can&apos;t see past use. Tell it how many you&apos;ve used — this isn&apos;t assumed to be zero.</Notice>
+              )}
+              <div className="mt-auto"><BenefitActions b={x} show={["mark"]} /></div>
+            </Card>
+            <Card aria-labelledby="h-date" className="flex flex-col gap-3 p-4">
+              <h2 id="h-date" className="text-xs font-medium uppercase tracking-wide text-muted">Date</h2>
+              <DeadlineControls b={x} />
+            </Card>
+          </div>
+
+          <Card tone={x.needs_review ? "focus" : "default"} aria-labelledby="h-terms" className="flex flex-col gap-3 p-4">
+            <h2 id="h-terms" className="text-xs font-medium uppercase tracking-wide text-muted">Conditions</h2>
             {x.conditions.length ? (
-              <div>
-                <p className="mb-1 text-xs font-medium text-muted">Conditions and limits</p>
-                <ul className="list-disc space-y-1 pl-5 text-sm">{x.conditions.map((c) => <li key={c}>{c}</li>)}</ul>
-              </div>
+              <ul className="list-disc space-y-1 pl-5 text-sm">{x.conditions.map((c) => <li key={c}>{c}</li>)}</ul>
             ) : <p className="text-sm text-muted">No conditions listed.</p>}
             {x.instructions.length > 0 && (
               <Details summary="How to use it">
@@ -72,14 +82,16 @@ export default function BenefitPage() {
             </Details>
             <ConfirmReview b={x} />
           </Card>
+
+          <Card tone={x.needs_review ? "default" : "focus"} aria-labelledby="h-next" className="flex flex-col gap-3 p-4">
+            <h2 id="h-next" className="text-xs font-medium uppercase tracking-wide text-muted">Next step</h2>
+            <p className="text-sm">Plan when to use it: Claimly opens a case with its own chat and drafts the request. Nothing is marked used until you confirm.</p>
+            <BenefitActions b={x} show={["plan", "ask"]} planPrimary={!x.needs_review} />
+          </Card>
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <Card className="p-4">
-            <SectionTitle title="Date" />
-            <DeadlineControls b={x} />
-          </Card>
-          <Card className="p-4">
+          <Card tone="quiet" className="p-4">
             <SectionTitle title="Reminders" action={<Button size="sm" icon={<BellPlus className="size-3.5" aria-hidden />} onClick={() => setNewReminder(true)}>Add</Button>} />
             {reminders.error && <ErrorBox error={reminders.error} />}
             {reminders.data?.data.length ? (

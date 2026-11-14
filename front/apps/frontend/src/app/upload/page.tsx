@@ -5,15 +5,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileText, FlaskConical, ImageIcon, Trash2, UploadCloud } from "lucide-react";
+import { Check, CheckCircle2, FileText, FlaskConical, ImageIcon, Trash2, UploadCloud } from "lucide-react";
 import { api } from "@/api/client";
 import { UPLOAD_LIMITS } from "@/api/config";
 import { ApiError, describeError } from "@/api/errors";
 import { trackJob, trackedJobs, untrackJob } from "@/api/jobs";
+import { CONFIRM_MS, SuccessIcon } from "@/components/motion";
 import type { EntryCategory, Job } from "@/api/types";
 import { ACCEPTED_MIME, ENTRY_CATEGORIES } from "@/api/types";
 import { JobStatusView } from "@/components/JobStatus";
-import { Badge, Button, ButtonLink, Card, ErrorBox, Field, Input, Notice, PageHeader, Select } from "@/components/ui";
+import { Badge, Button, ButtonLink, Card, ErrorBox, Field, IconButton, Input, Notice, PageHeader, Select } from "@/components/ui";
 import { CATEGORY_LABEL } from "@/lib/format";
 import { invalidate, qk, useJob } from "@/lib/hooks";
 import { SAMPLE_DOCUMENT, sampleDocumentFile } from "@/lib/samplePdf";
@@ -375,7 +376,7 @@ function UploadInner() {
                 size="lg"
                 // Wait for the success check to pop in first: one pose at a time.
                 cue={stage === "review"}
-                cueDelayMs={360}
+                cueDelayMs={CONFIRM_MS}
               >
                 Review results
               </ButtonLink>
@@ -446,22 +447,34 @@ function UploadSteps({ stage }: { stage: "choose" | "details" | "process" | "rev
 
 function FileRow({ f, missing, fresh, onRemove, onRetry, onJobDone }: { f: DraftFile; missing: boolean; fresh?: boolean; onRemove?: () => void; onRetry?: () => void; onJobDone: (j: Job) => void }) {
   const Icon = f.type === "application/pdf" ? FileText : ImageIcon;
+  // Secondary action: the check pops only when the server confirms this upload while we watch;
+  // a row restored from an earlier visit shows it at rest.
+  const prev = useRef(f.status);
+  const [confirmedNow, setConfirmedNow] = useState(false);
+  useEffect(() => {
+    if (prev.current !== "uploaded" && f.status === "uploaded") setConfirmedNow(true);
+    prev.current = f.status;
+  }, [f.status]);
   return (
     <li className="flex flex-col gap-2 py-3">
       <div className="flex items-center gap-3">
         {/* Leans back, then heads up toward the server as the upload starts (anticipation). */}
         <Icon className={clsx("size-5 shrink-0 text-muted", f.status === "uploading" ? "anticipate-send" : fresh && "squish-land")} aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{f.name}</p>
+          <p className="line-clamp-2 text-sm font-medium [overflow-wrap:anywhere]" title={f.name}>{f.name}</p>
           <p className="text-xs text-muted">{fmtSize(f.size)}</p>
         </div>
         {f.status === "pending" && (missing ? <Badge tone="warn">Choose again</Badge> : <Badge>Ready</Badge>)}
         {f.status === "uploading" && <Badge tone="info">Uploading…</Badge>}
         {f.status === "failed" && <Badge tone="danger">Not uploaded</Badge>}
+        {f.status === "uploaded" && (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-700">
+            {confirmedNow ? <SuccessIcon className="size-4" /> : <CheckCircle2 className="size-4" aria-hidden />}
+            Uploaded
+          </span>
+        )}
         {onRemove && (
-          <button type="button" onClick={onRemove} data-squish="" className="squish-icon rounded-md p-1.5 text-muted hover:bg-stone-100" aria-label={`Remove ${f.name}`}>
-            <Trash2 className="size-4" aria-hidden />
-          </button>
+          <IconButton icon={Trash2} label={`Remove ${f.name}`} bleed className="ml-0.5" onClick={onRemove} />
         )}
       </div>
       {f.status === "failed" && f.error && (

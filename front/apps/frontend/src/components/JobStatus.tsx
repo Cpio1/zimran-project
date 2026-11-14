@@ -20,7 +20,8 @@ export function ProgressBar({ value, label }: { value: number | null; label: str
       {value === null ? (
         <div className="animate-indeterminate absolute inset-y-0 left-0 w-2/5 rounded-full bg-brand-500" />
       ) : (
-        <div className="h-full rounded-full bg-brand-500 transition-[width]" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+        // Progress moves between two states: transform only, 180 ms ease-in-out (--dur-state).
+        <div className="h-full w-full origin-left rounded-full bg-brand-500 transition-transform duration-[180ms] ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none" style={{ transform: `scaleX(${Math.max(0, Math.min(100, value)) / 100})` }} />
       )}
     </div>
   );
@@ -43,7 +44,7 @@ export function JobStatusView({ job, label, onRetry, compact }: { job: Job | und
   }
   if (status === "succeeded") {
     return compact ? null : (
-      <p className="flex items-center gap-2 text-sm text-brand-700" aria-live="polite">
+      <p className="flex items-center gap-2 text-sm font-medium text-brand-700" aria-live="polite">
         <SuccessIcon className="size-4" /> {label} · done
       </p>
     );
@@ -51,7 +52,7 @@ export function JobStatusView({ job, label, onRetry, compact }: { job: Job | und
   if (status === "failed") {
     const err = job.error ? describeError(new ApiError({ status: 0, ...job.error })) : null;
     return (
-      <div className="flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 sm:flex-row sm:items-center" role="alert">
+      <div className="feedback-in flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 sm:flex-row sm:items-center" role="alert">
         <XCircle className="size-4 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1">{label} failed. {err?.title}</span>
         {onRetry && (job.error?.retryable ?? true) && <Button size="sm" onClick={onRetry} icon={<RefreshCw className="size-3.5" aria-hidden />}>Retry</Button>}

@@ -1,9 +1,10 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, X } from "lucide-react";
+import { AlertTriangle, Check, X } from "lucide-react";
 import clsx from "clsx";
 import { SuccessIcon } from "./motion";
+import { IconButton } from "./ui";
 
 interface Toast {
   id: number;
@@ -76,17 +77,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             onFocus={() => setPaused(true)}
             onBlur={() => setPaused(false)}
             className={clsx(
-              "pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-lg px-4 py-3 text-sm text-white shadow-lg",
+              "on-dark elev-2 pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-xl py-1.5 pl-4 pr-1.5 text-sm text-white",
               leaving ? "toast-out" : "toast-in",
               head.tone === "ok" ? "bg-ink" : head.tone === "warn" ? "bg-amber-700" : "bg-red-700",
             )}
           >
-            {head.tone === "ok" && <SuccessIcon icon={Check} afterMs={ENTER_MS} className="mt-0.5 size-4 text-brand-200" />}
-            <span className="min-w-0 flex-1">{head.text}</span>
+            {head.tone === "ok" ? <SuccessIcon icon={Check} afterMs={ENTER_MS} className="size-4 text-brand-200" /> : <AlertTriangle className="size-4 shrink-0" aria-hidden />}
+            <span className="min-w-0 flex-1 break-words py-1.5">{head.text}</span>
             {queue.length > 1 && <span className="shrink-0 text-xs text-white/70">+{queue.length - 1}</span>}
-            <button type="button" aria-label="Dismiss" data-squish="" className="squish-icon" onClick={() => setLeaving(true)}>
-              <X className="size-4" aria-hidden />
-            </button>
+            <IconButton icon={X} label="Dismiss" tone="inherit" className="text-white/80 hover:text-white" onClick={() => setLeaving(true)} />
           </div>
         )}
       </div>

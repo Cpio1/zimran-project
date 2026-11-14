@@ -46,18 +46,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           Claimly
         </Link>
         <SampleModeBadge className="mx-2 mb-4 self-start" />
-        <ButtonLink href="/upload" variant="primary" className="mx-1 mb-4" icon={<Upload className="size-4" aria-hidden />}>
+        {/* Staging: where the page itself is about uploading (Home's upload block, the Upload page) the
+            shortcut steps back so the page's own main action stays the only accent. */}
+        <ButtonLink href="/upload" variant={path === "/" || path.startsWith("/upload") ? "secondary" : "primary"} className="mx-1 mb-4" icon={<Upload className="size-4" aria-hidden />}>
           Upload document
         </ButtonLink>
+        {/* Frequency of use: navigation is the most repeated action, so it answers with a colour
+            change only — no squash or nudge. */}
         <nav aria-label="Main" className="flex flex-col gap-0.5">
           {[...NAV, ...SECONDARY].map(({ href, label, icon: Icon }, i) => (
             <Link
               key={href}
               href={href}
               aria-current={isActive(path, href) ? "page" : undefined}
-              data-squish=""
               className={clsx(
-                "squish-icon flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
+                "flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
                 i === NAV.length && "mt-4",
                 isActive(path, href) ? "bg-brand-50 font-medium text-brand-700" : "text-muted hover:bg-stone-100 hover:text-ink",
               )}
@@ -70,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-line bg-white/95 px-4 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-line bg-white px-4 md:hidden">
         <Link href="/" className="flex items-center gap-2 font-semibold">
           <span className="grid size-7 place-items-center rounded-lg bg-brand-600 text-sm text-white" aria-hidden>C</span>
           Claimly
@@ -78,7 +81,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-1">
           <SampleModeBadge />
           {SECONDARY.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} aria-label={label} aria-current={isActive(path, href) ? "page" : undefined} data-squish="" className={clsx("squish-icon grid size-10 place-items-center rounded-lg", isActive(path, href) ? "text-brand-700" : "text-muted")}>
+            <Link key={href} href={href} aria-label={label} title={label} aria-current={isActive(path, href) ? "page" : undefined} className={clsx("grid size-11 place-items-center rounded-lg transition-colors", isActive(path, href) ? "bg-brand-50 text-brand-700" : "text-muted hover:bg-stone-100")}>
               <Icon className="size-5" aria-hidden />
             </Link>
           ))}
@@ -90,14 +93,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav aria-label="Main" className="elev-2-up fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             aria-current={isActive(path, href) ? "page" : undefined}
-            data-squish=""
-            className={clsx("squish-icon flex h-16 flex-col items-center justify-center gap-1 text-[11px]", isActive(path, href) ? "font-semibold text-brand-700" : "text-muted")}
+            className={clsx("flex h-16 flex-col items-center justify-center gap-1 text-[11px] transition-colors", isActive(path, href) ? "font-semibold text-brand-700" : "text-muted")}
           >
             <Icon className="size-5" aria-hidden />
             {label}

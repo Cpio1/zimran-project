@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardCopy, FileText, MessageSquareReply, NotebookPen, RefreshCw, Send, Sparkles, Trophy } from "lucide-react";
+import { Check, CheckCircle2, ClipboardCopy, FileText, MessageSquareReply, NotebookPen, RefreshCw, Send, Sparkles, Trophy } from "lucide-react";
 import clsx from "clsx";
 import { api, listAll } from "@/api/client";
 import { ApiError } from "@/api/errors";
@@ -12,8 +12,9 @@ import { CASE_STATUSES } from "@/api/types";
 import { EvidenceChips } from "../Evidence";
 import { JobStatusView } from "../JobStatus";
 import { useToast } from "../Toast";
-import { Badge, Button, Card, Details, ErrorBox, Field, Input, Modal, Notice, SectionTitle, Select, Textarea } from "../ui";
-import { CASE_STATUS_LABEL, formatCents, formatDateTime, parseDollarsToCents } from "@/lib/format";
+import { SuccessIcon, useConfirmFlash } from "../motion";
+import { Badge, Button, Card, Details, ErrorBox, Field, Input, Modal, Notice, SectionTitle, Select, Textarea, parsedField } from "../ui";
+import { CASE_STATUS_LABEL, formatCents, formatDateTime, parseMoney } from "@/lib/format";
 import { invalidate, qk, useJob } from "@/lib/hooks";
 
 // ───────── staging: the next action for the case's current state ─────────
@@ -96,7 +97,9 @@ export function StatusModal({ c, initial, onClose }: { c: Case; initial: CaseSta
   const [when, setWhen] = useState(localNow());
   const [note, setNote] = useState(initial === "submitted" ? "Sent by me" : "");
   const [amount, setAmount] = useState("");
-  const cents = parseDollarsToCents(amount);
+  const amountParsed = parseMoney(amount);
+  const cents = amountParsed.kind === "ok" ? amountParsed.value : amountParsed.kind === "empty" ? null : NaN;
+  const amountFeedback = parsedField(amount, amountParsed, setAmount);
   const m = useMutation({
     mutationFn: (version: number) =>
       api.setCaseStatus(c.id, {
@@ -124,7 +127,7 @@ export function StatusModal({ c, initial, onClose }: { c: Case; initial: CaseSta
         </Field>
         <Field label="When" htmlFor="st-when"><Input id="st-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} /></Field>
         {status === "approved" && (
-          <Field label="Approved amount (optional)" htmlFor="st-amount" hint="Only if the company stated an amount." error={Number.isNaN(cents) ? "Enter an amount like 129.99" : null}>
+          <Field label="Approved amount (optional)" htmlFor="st-amount" hint={amountFeedback.hint ?? "Only if the company stated an amount."} error={amountFeedback.error}>
             <Input id="st-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="$0.00" />
           </Field>
         )}
@@ -245,6 +248,7 @@ export function DraftSection({ c, kind, drafts, onMarkSent, focus }: { c: Case; 
 function DraftEditor({ draft, onMarkSent, showSent, focus }: { draft: Draft; onMarkSent: () => void; showSent: boolean; focus?: boolean }) {
   const qc = useQueryClient();
   const toast = useToast();
+  const copied = useConfirmFlash();
   const [subject, setSubject] = useState(draft.content.subject);
   const [body, setBody] = useState(draft.content.body);
   const dirty = subject !== draft.content.subject || body !== draft.content.body;
@@ -258,6 +262,7 @@ function DraftEditor({ draft, onMarkSent, showSent, focus }: { draft: Draft; onM
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(`${subject}\n\n${body}`);
+      copied.confirm();
       toast("Copied. Copying doesn't mark it as sent.");
     } catch {
       toast("Couldn't copy — select the text and copy it manually.", "warn");
@@ -282,7 +287,13 @@ function DraftEditor({ draft, onMarkSent, showSent, focus }: { draft: Draft; onM
         </Notice>
       ) : <ErrorBox error={save.error} onRetry={() => save.mutate()} />)}
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" icon={<ClipboardCopy className="size-4" aria-hidden />} onClick={copy}>Copy</Button>
+        <Button
+          variant="secondary"
+          icon={copied.shown ? <SuccessIcon key={copied.key} icon={Check} className="size-4 text-brand-700" /> : <ClipboardCopy className="size-4" aria-hidden />}
+          onClick={copy}
+        >
+          Copy
+        </Button>
         {/* One main action: unsaved edits come first; otherwise, when sending is the next step, "I sent it". */}
         <Button variant={dirty ? "primary" : "secondary"} disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}>Save edits</Button>
         {showSent && <Button variant={focus && !dirty ? "primary" : "secondary"} cue={focus && !dirty} icon={<Send className="size-4" aria-hidden />} onClick={onMarkSent}>I sent it</Button>}
@@ -404,8 +415,13 @@ function OutcomeForm({ c, existing, onSaved, onCancel }: { c: Case; existing: Ou
   const [qty, setQty] = useState(existing?.quantity != null ? String(existing.quantity) : "1");
   const [source, setSource] = useState<Outcome["confirmation_source"]>(existing?.confirmation_source ?? "user_reported");
   const [note, setNote] = useState(existing?.note ?? "");
-  const cashC = parseDollarsToCents(cash);
-  const estC = parseDollarsToCents(est);
+  const cashP = parseMoney(cash);
+  const estP = parseMoney(est);
+  const toCents = (p: typeof cashP) => (p.kind === "ok" ? p.value : p.kind === "empty" ? null : NaN);
+  const cashC = toCents(cashP);
+  const estC = toCents(estP);
+  const cashF = parsedField(cash, cashP, setCash);
+  const estF = parsedField(est, estP, setEst);
   const usesUnits = kind === "service_used" || kind === "voucher_used";
   const qtyN = qty === "" ? null : Number(qty);
   const bad = Number.isNaN(cashC) || Number.isNaN(estC) || (usesUnits && qtyN !== null && (!Number.isInteger(qtyN) || qtyN < 0));
@@ -430,7 +446,7 @@ function OutcomeForm({ c, existing, onSaved, onCancel }: { c: Case; existing: Ou
           </Select>
         </Field>
         {kind === "cash_refund" && (
-          <Field label="Amount received" htmlFor="o-cash" error={Number.isNaN(cashC) ? "Enter an amount like 129.99" : null}>
+          <Field label="Amount received" htmlFor="o-cash" error={cashF.error} hint={cashF.hint}>
             <Input id="o-cash" inputMode="decimal" value={cash} onChange={(e) => setCash(e.target.value)} placeholder="$0.00" />
           </Field>
         )}
@@ -440,7 +456,7 @@ function OutcomeForm({ c, existing, onSaved, onCancel }: { c: Case; existing: Ou
           </Field>
         )}
         {kind !== "cash_refund" && kind !== "denied" && kind !== "closed_without_result" && (
-          <Field label="Estimated value (optional)" htmlFor="o-est" hint="Your estimate — counted separately from cash." error={Number.isNaN(estC) ? "Enter an amount like 80" : null}>
+          <Field label="Estimated value (optional)" htmlFor="o-est" hint={estF.hint ?? "Your estimate — counted separately from cash."} error={estF.error}>
             <Input id="o-est" inputMode="decimal" value={est} onChange={(e) => setEst(e.target.value)} placeholder="$0" />
           </Field>
         )}

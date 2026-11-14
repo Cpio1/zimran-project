@@ -111,7 +111,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
             {thread.scope === "vault" && (
               <div className="flex flex-wrap gap-2">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s.text} type="button" onClick={() => submit(s.text, s.purpose)} className="rounded-full border border-line bg-white px-3 py-1.5 text-left text-sm hover:border-brand-200 hover:bg-brand-50">
+                  <button key={s.text} type="button" onClick={() => submit(s.text, s.purpose)} className="hit-y rounded-full border border-line bg-white px-3 py-2 text-left text-sm hover:border-brand-200 hover:bg-brand-50">
                     {s.text}
                   </button>
                 ))}
@@ -152,7 +152,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
               role="radio"
               aria-checked={purpose === v}
               onClick={() => setPurpose(v)}
-              className={clsx("rounded-full px-3 py-1 text-xs font-medium", purpose === v ? "bg-brand-600 text-white" : "bg-stone-100 text-muted hover:text-ink")}
+              className={clsx("hit-y rounded-full px-3 py-1.5 text-xs font-medium transition-colors", purpose === v ? "bg-brand-600 text-white" : "bg-stone-100 text-muted hover:text-ink")}
             >
               {label}
             </button>
@@ -173,9 +173,10 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
               }
             }}
             placeholder={placeholder ?? (purpose === "match_need" ? "Describe what you need, e.g. “my laptop screen broke”" : "Ask about your documents")}
-            className="max-h-40 min-h-10 w-full min-w-0 flex-1 resize-y rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+            className="max-h-40 min-h-11 w-full min-w-0 flex-1 resize-y rounded-lg border border-line px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
-          <Button type="submit" variant={text.trim() ? "primary" : "secondary"} aria-label="Send" disabled={!text.trim()} className="size-10 px-0">
+          {/* Fitts: the send target sits right at the end of the field, 44 × 44. */}
+          <Button type="submit" variant={text.trim() ? "primary" : "secondary"} aria-label="Send" disabled={!text.trim()} className="size-11 px-0">
             <ArrowUp data-anticipate="up" className="size-4" aria-hidden />
           </Button>
         </div>
@@ -186,11 +187,12 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
 
 function UserBubble({ text, pending }: { text: string; pending?: boolean }) {
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-col items-end">
       <p className={clsx("max-w-[85%] whitespace-pre-line break-words rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-sm text-white", pending && "opacity-70")}>
         {text}
-        {pending && <span className="sr-only"> (sending)</span>}
       </p>
+      {/* Doherty: the bubble shows at once; if the server takes a moment, say so. */}
+      {pending && <span className="delayed-fade mt-1 text-xs text-muted" role="status">Sending…</span>}
     </div>
   );
 }
@@ -253,7 +255,7 @@ function AssistantMessage({ m, thread, onAsk }: { m: ChatMessage; thread: Thread
         {m.questions.length > 0 && (
           <div className="flex flex-col gap-1.5">
             {m.questions.map((q) => (
-              <button key={q} type="button" onClick={() => onAsk(q)} className="flex items-start gap-2 text-left text-sm text-sky-800 hover:underline">
+              <button key={q} type="button" onClick={() => onAsk(q)} className="flex min-h-11 items-center gap-2 text-left text-sm text-sky-800 hover:underline">
                 <HelpCircle className="mt-0.5 size-4 shrink-0" aria-hidden /> {q}
               </button>
             ))}
@@ -263,9 +265,9 @@ function AssistantMessage({ m, thread, onAsk }: { m: ChatMessage; thread: Thread
           <div className="flex flex-wrap gap-2">
             {actions.map((a, i) =>
               a.href ? (
-                <Link key={i} href={a.href} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-stone-50">{a.icon}{a.label}</Link>
+                <Link key={i} href={a.href} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-stone-50">{a.icon}{a.label}</Link>
               ) : (
-                <button key={i} type="button" onClick={() => onAsk(a.label)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-stone-50">{a.icon}{a.label}</button>
+                <button key={i} type="button" onClick={() => onAsk(a.label)} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-stone-50">{a.icon}{a.label}</button>
               ),
             )}
           </div>
