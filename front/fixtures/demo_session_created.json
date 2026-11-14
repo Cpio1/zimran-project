@@ -1,0 +1,8 @@
+{
+  "data": {
+    "id": "10000000-0000-4000-8000-000000000099",
+    "session_token": "sample-demo-token-never-use-this-value-on-a-real-server",
+    "expires_at": "2026-11-21T12:00:00Z"
+  },
+  "request_id": "sample-request-001"
+}

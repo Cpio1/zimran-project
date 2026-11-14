@@ -1,0 +1,32 @@
+{
+  "data": {
+    "id": "10000000-0000-4000-8000-000000000008",
+    "case_id": "10000000-0000-4000-8000-000000000006",
+    "kind": "initial",
+    "content": {
+      "subject": "Certificate usage and booking request",
+      "body": "Hello, I have a certificate listing four dental cleaning services. Please confirm the remaining balance and the booking procedure. Thank you.",
+      "attachments": [
+        "Certificate"
+      ],
+      "contact": null,
+      "contact_origin": "unknown",
+      "evidence_refs": [
+        {
+          "document_id": "10000000-0000-4000-8000-000000000002",
+          "document_version": 1,
+          "page": 1,
+          "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+        }
+      ],
+      "missing_info": [
+        "Provider contact"
+      ]
+    },
+    "input_version": 1,
+    "user_edited": false,
+    "stale": false,
+    "updated_at": "2026-11-14T12:00:00Z"
+  },
+  "request_id": "sample-request-001"
+}

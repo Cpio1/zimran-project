@@ -1,0 +1,15 @@
+{
+  "data": {
+    "timezone": "America/New_York",
+    "email_notification_opt_in": false,
+    "email_configured": false,
+    "reminder_offsets": [
+      7,
+      1,
+      0
+    ],
+    "local_notification_time": "09:00",
+    "notification_email": null
+  },
+  "request_id": "sample-request-001"
+}

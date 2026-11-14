@@ -1,0 +1,28 @@
+{
+  "data": {
+    "status": "insufficient_evidence",
+    "summary": "Prior usage must be confirmed.",
+    "reasons": [
+      "The document lists four services but not the remaining balance."
+    ],
+    "evidence_refs": [
+      {
+        "document_id": "10000000-0000-4000-8000-000000000002",
+        "document_version": 1,
+        "page": 1,
+        "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+      }
+    ],
+    "missing_info": [
+      "Prior usage"
+    ],
+    "next_actions": [
+      {
+        "type": "open_benefit",
+        "label": "View certificate",
+        "target_id": "10000000-0000-4000-8000-000000000003"
+      }
+    ]
+  },
+  "request_id": "sample-request-001"
+}

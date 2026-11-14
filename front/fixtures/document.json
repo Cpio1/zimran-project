@@ -1,0 +1,17 @@
+{
+  "data": {
+    "id": "10000000-0000-4000-8000-000000000002",
+    "entry_id": "10000000-0000-4000-8000-000000000001",
+    "name": "sample-dental.pdf",
+    "mime_type": "application/pdf",
+    "version": 1,
+    "status": "needs_review",
+    "page_count": 1,
+    "facts": {},
+    "review_flags": [
+      "Confirm prior usage and the meaning of the printed date."
+    ],
+    "created_at": "2026-11-14T12:00:00Z"
+  },
+  "request_id": "sample-request-001"
+}

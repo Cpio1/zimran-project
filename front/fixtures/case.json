@@ -1,0 +1,26 @@
+{
+  "data": {
+    "id": "10000000-0000-4000-8000-000000000006",
+    "title": "Plan certificate use",
+    "type": "benefit_use",
+    "entry_ids": [
+      "10000000-0000-4000-8000-000000000001"
+    ],
+    "document_ids": [
+      "10000000-0000-4000-8000-000000000002"
+    ],
+    "benefit_id": "10000000-0000-4000-8000-000000000003",
+    "situation": "I would like to book a cleaning.",
+    "incident_date": null,
+    "desired_result": "Confirm remaining services and arrange use.",
+    "status": "draft",
+    "assessment": null,
+    "requested_amount_cents": null,
+    "approved_amount_cents": null,
+    "data_version": 1,
+    "thread_id": "10000000-0000-4000-8000-000000000012",
+    "created_at": "2026-11-14T12:00:00Z",
+    "updated_at": "2026-11-14T12:00:00Z"
+  },
+  "request_id": "sample-request-001"
+}

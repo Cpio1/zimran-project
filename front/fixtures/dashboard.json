@@ -1,0 +1,88 @@
+{
+  "data": {
+    "available_benefits_count": 0,
+    "usage_unknown_count": 1,
+    "document_valued_benefits_cents": 0,
+    "approved_not_received_cents": 0,
+    "cash_recovered_cents": 0,
+    "services_used_units": 0,
+    "currency": "USD",
+    "next_benefits": [
+      {
+        "title": "Four dental cleaning services",
+        "type": "voucher",
+        "description": "The certificate lists four cleaning services. Prior usage is unknown.",
+        "conditions": [
+          "Confirm prior usage with the provider."
+        ],
+        "units_total": 4,
+        "stated_value_cents": null,
+        "currency": null,
+        "deadline_rule": {
+          "kind": "absolute",
+          "semantics": "service_use_by",
+          "date": "2026-12-31",
+          "anchor_field": null,
+          "duration_value": null,
+          "duration_unit": null,
+          "last_day_inclusion": "unknown",
+          "evidence_refs": [
+            {
+              "document_id": "10000000-0000-4000-8000-000000000002",
+              "document_version": 1,
+              "page": 1,
+              "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+            }
+          ]
+        },
+        "instructions": [
+          "Contact the provider to confirm booking and certificate terms."
+        ],
+        "evidence_refs": [
+          {
+            "document_id": "10000000-0000-4000-8000-000000000002",
+            "document_version": 1,
+            "page": 1,
+            "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+          }
+        ],
+        "needs_review": true,
+        "id": "10000000-0000-4000-8000-000000000003",
+        "entry_id": "10000000-0000-4000-8000-000000000001",
+        "usage_state": "unknown",
+        "used_units": null,
+        "remaining_units": null,
+        "deadline_date": null,
+        "deadline_status": "needs_review",
+        "data_version": 1
+      }
+    ],
+    "upcoming_reminders": [],
+    "active_cases": [
+      {
+        "id": "10000000-0000-4000-8000-000000000006",
+        "title": "Plan certificate use",
+        "type": "benefit_use",
+        "entry_ids": [
+          "10000000-0000-4000-8000-000000000001"
+        ],
+        "document_ids": [
+          "10000000-0000-4000-8000-000000000002"
+        ],
+        "benefit_id": "10000000-0000-4000-8000-000000000003",
+        "situation": "I would like to book a cleaning.",
+        "incident_date": null,
+        "desired_result": "Confirm remaining services and arrange use.",
+        "status": "draft",
+        "assessment": null,
+        "requested_amount_cents": null,
+        "approved_amount_cents": null,
+        "data_version": 1,
+        "thread_id": "10000000-0000-4000-8000-000000000012",
+        "created_at": "2026-11-14T12:00:00Z",
+        "updated_at": "2026-11-14T12:00:00Z"
+      }
+    ]
+  },
+  "request_id": "sample-request-001"
+}

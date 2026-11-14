@@ -1,0 +1,51 @@
+{
+  "data": {
+    "title": "Four dental cleaning services",
+    "type": "voucher",
+    "description": "The certificate lists four cleaning services. Prior usage is unknown.",
+    "conditions": [
+      "Confirm prior usage with the provider."
+    ],
+    "units_total": 4,
+    "stated_value_cents": null,
+    "currency": null,
+    "deadline_rule": {
+      "kind": "absolute",
+      "semantics": "service_use_by",
+      "date": "2026-12-31",
+      "anchor_field": null,
+      "duration_value": null,
+      "duration_unit": null,
+      "last_day_inclusion": "unknown",
+      "evidence_refs": [
+        {
+          "document_id": "10000000-0000-4000-8000-000000000002",
+          "document_version": 1,
+          "page": 1,
+          "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+        }
+      ]
+    },
+    "instructions": [
+      "Contact the provider to confirm booking and certificate terms."
+    ],
+    "evidence_refs": [
+      {
+        "document_id": "10000000-0000-4000-8000-000000000002",
+        "document_version": 1,
+        "page": 1,
+        "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+      }
+    ],
+    "needs_review": true,
+    "id": "10000000-0000-4000-8000-000000000003",
+    "entry_id": "10000000-0000-4000-8000-000000000001",
+    "usage_state": "unknown",
+    "used_units": null,
+    "remaining_units": null,
+    "deadline_date": null,
+    "deadline_status": "needs_review",
+    "data_version": 1
+  },
+  "request_id": "sample-request-001"
+}

@@ -1,0 +1,64 @@
+{
+  "data": {
+    "category": "gift_certificate",
+    "title": "Sample dental certificate",
+    "provider": "Sample Dental",
+    "subject": "Cleaning services",
+    "facts": {},
+    "pages": [
+      {
+        "page": 1,
+        "text": "This certificate includes four dental cleaning services. Valid through December 31, 2026.",
+        "needs_review": false
+      }
+    ],
+    "benefits": [
+      {
+        "candidate_key": "dental-cleaning",
+        "title": "Four dental cleaning services",
+        "type": "voucher",
+        "description": "The certificate lists four cleaning services. Prior usage is unknown.",
+        "conditions": [
+          "Confirm prior usage with the provider."
+        ],
+        "units_total": 4,
+        "stated_value_cents": null,
+        "currency": null,
+        "deadline_rule": {
+          "kind": "absolute",
+          "semantics": "service_use_by",
+          "date": "2026-12-31",
+          "anchor_field": null,
+          "duration_value": null,
+          "duration_unit": null,
+          "last_day_inclusion": "unknown",
+          "evidence_refs": [
+            {
+              "document_id": "10000000-0000-4000-8000-000000000002",
+              "document_version": 1,
+              "page": 1,
+              "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+            }
+          ]
+        },
+        "instructions": [
+          "Contact the provider to confirm booking and certificate terms."
+        ],
+        "evidence_refs": [
+          {
+            "document_id": "10000000-0000-4000-8000-000000000002",
+            "document_version": 1,
+            "page": 1,
+            "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+          }
+        ],
+        "needs_review": true
+      }
+    ],
+    "review_flags": [
+      "Confirm prior usage and the meaning of the printed date."
+    ]
+  },
+  "request_id": "sample-request-001",
+  "contract_version": "2.0.0"
+}

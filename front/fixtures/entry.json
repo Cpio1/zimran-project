@@ -1,0 +1,20 @@
+{
+  "data": {
+    "id": "10000000-0000-4000-8000-000000000001",
+    "title": "Sample dental certificate",
+    "category": "gift_certificate",
+    "provider": "Sample Dental",
+    "subject": "Cleaning services",
+    "facts": {},
+    "data_version": 1,
+    "document_ids": [
+      "10000000-0000-4000-8000-000000000002"
+    ],
+    "benefit_ids": [
+      "10000000-0000-4000-8000-000000000003"
+    ],
+    "created_at": "2026-11-14T12:00:00Z",
+    "updated_at": "2026-11-14T12:00:00Z"
+  },
+  "request_id": "sample-request-001"
+}

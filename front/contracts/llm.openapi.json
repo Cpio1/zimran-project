@@ -1,0 +1,4651 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Claimly Internal LLM API",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001"
+    }
+  ],
+  "security": [
+    {
+      "ServiceBearer": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "llm_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/internal/v1/extract": {
+      "post": {
+        "operationId": "llm_extract",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionResponse"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmExtractMultipart"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/answer": {
+      "post": {
+        "operationId": "llm_answer",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResponse"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/match": {
+      "post": {
+        "operationId": "llm_match",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResponse"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/assess": {
+      "post": {
+        "operationId": "llm_assess",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentResponse"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/draft": {
+      "post": {
+        "operationId": "llm_draft",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftResponse"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/analyze-reply": {
+      "post": {
+        "operationId": "llm_analyze_reply",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplyResponse"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-Contract-Version": {
+                "schema": {
+                  "type": "string",
+                  "const": "2.0.0"
+                },
+                "description": "Contract version"
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyRequest"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EvidenceRef": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "document_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "document_id",
+          "document_version",
+          "page",
+          "quote"
+        ],
+        "additionalProperties": false
+      },
+      "Fact": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user",
+              "calculated"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "needs_review": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value",
+          "origin",
+          "evidence_refs",
+          "needs_review"
+        ],
+        "additionalProperties": false
+      },
+      "Page": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "needs_review": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "page",
+          "text",
+          "needs_review"
+        ],
+        "additionalProperties": false
+      },
+      "DeadlineRule": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "absolute",
+              "relative",
+              "unknown"
+            ]
+          },
+          "semantics": {
+            "type": "string",
+            "enum": [
+              "coverage_end",
+              "document_expiry",
+              "claim_deadline",
+              "refund_expected_by",
+              "follow_up",
+              "service_use_by"
+            ]
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anchor_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_value": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "calendar_days",
+                  "calendar_months",
+                  "business_days"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_day_inclusion": {
+            "type": "string",
+            "enum": [
+              "inclusive",
+              "exclusive",
+              "unknown"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "semantics",
+          "date",
+          "anchor_field",
+          "duration_value",
+          "duration_unit",
+          "last_day_inclusion",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      },
+      "Entry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "warranty",
+              "insurance",
+              "service_agreement",
+              "service_contract",
+              "gift_certificate",
+              "subscription",
+              "membership",
+              "refund_confirmation",
+              "correspondence",
+              "other"
+            ]
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Fact"
+            }
+          },
+          "data_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "benefit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "category",
+          "provider",
+          "subject",
+          "facts",
+          "data_version",
+          "document_ids",
+          "benefit_ids",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entry_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string",
+            "enum": [
+              "application/pdf",
+              "image/jpeg",
+              "image/png"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "processing",
+              "needs_review",
+              "ready",
+              "failed"
+            ]
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Fact"
+            }
+          },
+          "review_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "entry_id",
+          "name",
+          "mime_type",
+          "version",
+          "status",
+          "page_count",
+          "facts",
+          "review_flags",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "BenefitCandidate": {
+        "type": "object",
+        "properties": {
+          "candidate_key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "service",
+              "warranty_coverage",
+              "insurance_coverage",
+              "voucher",
+              "membership_benefit",
+              "return_option",
+              "other"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "units_total": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stated_value_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeadlineRule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "needs_review": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "candidate_key",
+          "title",
+          "type",
+          "description",
+          "conditions",
+          "units_total",
+          "stated_value_cents",
+          "currency",
+          "deadline_rule",
+          "instructions",
+          "evidence_refs",
+          "needs_review"
+        ],
+        "additionalProperties": false
+      },
+      "Benefit": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "service",
+              "warranty_coverage",
+              "insurance_coverage",
+              "voucher",
+              "membership_benefit",
+              "return_option",
+              "other"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "units_total": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stated_value_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeadlineRule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "needs_review": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entry_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "usage_state": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "unused",
+              "partial",
+              "used"
+            ]
+          },
+          "used_units": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "remaining_units": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_status": {
+            "type": "string",
+            "enum": [
+              "document_confirmed",
+              "user_set",
+              "needs_review",
+              "not_known"
+            ]
+          },
+          "data_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "description",
+          "conditions",
+          "units_total",
+          "stated_value_cents",
+          "currency",
+          "deadline_rule",
+          "instructions",
+          "evidence_refs",
+          "needs_review",
+          "id",
+          "entry_id",
+          "usage_state",
+          "used_units",
+          "remaining_units",
+          "deadline_date",
+          "deadline_status",
+          "data_version"
+        ],
+        "additionalProperties": false
+      },
+      "NextAction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "open_benefit",
+              "open_case",
+              "add_document",
+              "ask_question"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "label",
+          "target_id"
+        ],
+        "additionalProperties": false
+      },
+      "Assessment": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "possible",
+              "insufficient_evidence",
+              "likely_excluded"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "missing_info": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NextAction"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "summary",
+          "reasons",
+          "evidence_refs",
+          "missing_info",
+          "next_actions"
+        ],
+        "additionalProperties": false
+      },
+      "DraftContent": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user",
+              "unknown"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "missing_info": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "subject",
+          "body",
+          "attachments",
+          "contact",
+          "contact_origin",
+          "evidence_refs",
+          "missing_info"
+        ],
+        "additionalProperties": false
+      },
+      "Draft": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "initial",
+              "follow_up"
+            ]
+          },
+          "content": {
+            "$ref": "#/components/schemas/DraftContent"
+          },
+          "input_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "user_edited": {
+            "type": "boolean"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "case_id",
+          "kind",
+          "content",
+          "input_version",
+          "user_edited",
+          "stale",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "Case": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "benefit_use",
+              "warranty",
+              "insurance_question",
+              "product_return",
+              "refund_delay",
+              "follow_up"
+            ]
+          },
+          "entry_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "benefit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "situation": {
+            "type": "string"
+          },
+          "incident_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "desired_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "prepared",
+              "submitted",
+              "awaiting_response",
+              "approved",
+              "denied",
+              "resolved"
+            ]
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Assessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requested_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approved_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "type",
+          "entry_ids",
+          "document_ids",
+          "benefit_id",
+          "situation",
+          "incident_date",
+          "desired_result",
+          "status",
+          "assessment",
+          "requested_amount_cents",
+          "approved_amount_cents",
+          "data_version",
+          "thread_id",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "Thread": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "vault",
+              "entry",
+              "case"
+            ]
+          },
+          "entry_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "scope",
+          "entry_id",
+          "case_id",
+          "document_ids",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "matched_benefit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NextAction"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "thread_id",
+          "role",
+          "content",
+          "evidence_refs",
+          "matched_benefit_ids",
+          "questions",
+          "next_actions",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyAnalysis": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "company_position": {
+            "type": "string"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "missing_info": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NextAction"
+            }
+          }
+        },
+        "required": [
+          "summary",
+          "company_position",
+          "comparison",
+          "evidence_refs",
+          "missing_info",
+          "next_actions"
+        ],
+        "additionalProperties": false
+      },
+      "CaseEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "note",
+              "status_change",
+              "company_reply",
+              "outcome",
+              "draft_created"
+            ]
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "attachment_document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "new_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "prepared",
+                  "submitted",
+                  "awaiting_response",
+                  "approved",
+                  "denied",
+                  "resolved"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reply_analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyAnalysis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "case_id",
+          "type",
+          "event_date",
+          "note",
+          "attachment_document_ids",
+          "new_status",
+          "reply_analysis"
+        ],
+        "additionalProperties": false
+      },
+      "Outcome": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "benefit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cash_refund",
+              "service_used",
+              "repair",
+              "replacement",
+              "voucher_used",
+              "denied",
+              "closed_without_result"
+            ]
+          },
+          "cash_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimated_value_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value_origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user_estimate",
+              "not_known"
+            ]
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "confirmation_source": {
+            "type": "string",
+            "enum": [
+              "user_reported",
+              "document_supported"
+            ]
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "case_id",
+          "benefit_id",
+          "kind",
+          "cash_amount_cents",
+          "estimated_value_cents",
+          "value_origin",
+          "quantity",
+          "currency",
+          "confirmation_source",
+          "confirmed_at",
+          "evidence_refs",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "Reminder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "benefit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "local_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user",
+              "claimly_suggestion"
+            ]
+          },
+          "offset_days": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "enum": [
+                30,
+                14,
+                7,
+                1,
+                0
+              ]
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "in_app",
+                "email"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "done",
+              "cancelled",
+              "needs_review"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "benefit_id",
+          "case_id",
+          "title",
+          "date",
+          "timezone",
+          "local_time",
+          "origin",
+          "offset_days",
+          "channels",
+          "status",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reminder_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "in_app",
+              "email"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sent",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "reminder_id",
+          "title",
+          "body",
+          "channel",
+          "status",
+          "scheduled_at",
+          "sent_at",
+          "read_at"
+        ],
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "timezone": {
+            "type": "string"
+          },
+          "email_notification_opt_in": {
+            "type": "boolean"
+          },
+          "email_configured": {
+            "type": "boolean"
+          },
+          "reminder_offsets": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "enum": [
+                30,
+                14,
+                7,
+                1,
+                0
+              ]
+            }
+          },
+          "local_notification_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$"
+          },
+          "notification_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "timezone",
+          "email_notification_opt_in",
+          "email_configured",
+          "reminder_offsets",
+          "local_notification_time",
+          "notification_email"
+        ],
+        "additionalProperties": false
+      },
+      "Dashboard": {
+        "type": "object",
+        "properties": {
+          "available_benefits_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "usage_unknown_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "document_valued_benefits_cents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "approved_not_received_cents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cash_recovered_cents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "services_used_units": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "next_benefits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Benefit"
+            }
+          },
+          "upcoming_reminders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reminder"
+            }
+          },
+          "active_cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            }
+          }
+        },
+        "required": [
+          "available_benefits_count",
+          "usage_unknown_count",
+          "document_valued_benefits_cents",
+          "approved_not_received_cents",
+          "cash_recovered_cents",
+          "services_used_units",
+          "currency",
+          "next_benefits",
+          "upcoming_reminders",
+          "active_cases"
+        ],
+        "additionalProperties": false
+      },
+      "ExtractJobResult": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "extract"
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "benefit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "review_required": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "document_id",
+          "benefit_ids",
+          "review_required"
+        ],
+        "additionalProperties": false
+      },
+      "AnswerJobResult": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "match_need"
+            ]
+          },
+          "assistant_message": {
+            "$ref": "#/components/schemas/ChatMessage"
+          }
+        },
+        "required": [
+          "type",
+          "assistant_message"
+        ],
+        "additionalProperties": false
+      },
+      "AssessmentJobResult": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "assess"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/Assessment"
+          }
+        },
+        "required": [
+          "type",
+          "case_id",
+          "assessment"
+        ],
+        "additionalProperties": false
+      },
+      "DraftJobResult": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "draft_follow_up"
+            ]
+          },
+          "draft": {
+            "$ref": "#/components/schemas/Draft"
+          }
+        },
+        "required": [
+          "type",
+          "draft"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyJobResult": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "analyze_reply"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event": {
+            "$ref": "#/components/schemas/CaseEvent"
+          }
+        },
+        "required": [
+          "type",
+          "case_id",
+          "event"
+        ],
+        "additionalProperties": false
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNAUTHORIZED",
+              "DEMO_SESSION_REQUIRED",
+              "DEMO_SESSION_EXPIRED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "VALIDATION_ERROR",
+              "CONFLICT",
+              "RATE_LIMITED",
+              "AI_NOT_CONFIGURED",
+              "LLM_UNAVAILABLE",
+              "INVALID_LLM_OUTPUT",
+              "UNREADABLE_DOCUMENT",
+              "FILE_TOO_LARGE",
+              "STALE_INPUT",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "retryable"
+        ],
+        "additionalProperties": false
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiError"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "extract",
+              "answer",
+              "match_need",
+              "assess",
+              "draft",
+              "analyze_reply",
+              "draft_follow_up"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "stale"
+            ]
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/ExtractJobResult"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AnswerJobResult"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AssessmentJobResult"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DraftJobResult"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReplyJobResult"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApiError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "progress",
+          "result",
+          "error",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "DocumentContext": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "document_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Page"
+            }
+          }
+        },
+        "required": [
+          "document_id",
+          "document_version",
+          "name",
+          "pages"
+        ],
+        "additionalProperties": false
+      },
+      "HistoryMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "additionalProperties": false
+      },
+      "LlmContext": {
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Benefit"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentContext"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryMessage"
+            }
+          },
+          "case": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Case"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "as_of",
+          "timezone",
+          "entries",
+          "benefits",
+          "documents",
+          "history",
+          "case"
+        ],
+        "additionalProperties": false
+      },
+      "ExtractRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "document_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string",
+            "enum": [
+              "application/pdf",
+              "image/jpeg",
+              "image/png"
+            ]
+          }
+        },
+        "required": [
+          "request_id",
+          "contract_version",
+          "document_id",
+          "document_version",
+          "filename",
+          "mime_type"
+        ],
+        "additionalProperties": false
+      },
+      "ExtractionOutput": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "warranty",
+              "insurance",
+              "service_agreement",
+              "service_contract",
+              "gift_certificate",
+              "subscription",
+              "membership",
+              "refund_confirmation",
+              "correspondence",
+              "other"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Fact"
+            }
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Page"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BenefitCandidate"
+            }
+          },
+          "review_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "category",
+          "title",
+          "provider",
+          "subject",
+          "facts",
+          "pages",
+          "benefits",
+          "review_flags"
+        ],
+        "additionalProperties": false
+      },
+      "LlmAnswer": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "matched_benefit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NextAction"
+            }
+          }
+        },
+        "required": [
+          "answer",
+          "evidence_refs",
+          "matched_benefit_ids",
+          "questions",
+          "next_actions"
+        ],
+        "additionalProperties": false
+      },
+      "AnswerRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "question": {
+            "type": "string"
+          },
+          "context": {
+            "$ref": "#/components/schemas/LlmContext"
+          }
+        },
+        "required": [
+          "request_id",
+          "contract_version",
+          "question",
+          "context"
+        ],
+        "additionalProperties": false
+      },
+      "AssessRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "context": {
+            "$ref": "#/components/schemas/LlmContext"
+          }
+        },
+        "required": [
+          "request_id",
+          "contract_version",
+          "context"
+        ],
+        "additionalProperties": false
+      },
+      "DraftRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "initial",
+              "follow_up"
+            ]
+          },
+          "context": {
+            "$ref": "#/components/schemas/LlmContext"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Assessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "company_reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "request_id",
+          "contract_version",
+          "kind",
+          "context",
+          "assessment",
+          "company_reply"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "context": {
+            "$ref": "#/components/schemas/LlmContext"
+          },
+          "reply_text": {
+            "type": "string"
+          },
+          "reply_document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "request_id",
+          "contract_version",
+          "context",
+          "reply_text",
+          "reply_document_ids"
+        ],
+        "additionalProperties": false
+      },
+      "EntryCreate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "warranty",
+              "insurance",
+              "service_agreement",
+              "service_contract",
+              "gift_certificate",
+              "subscription",
+              "membership",
+              "refund_confirmation",
+              "correspondence",
+              "other"
+            ]
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "category"
+        ],
+        "additionalProperties": false
+      },
+      "EntryPatch": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Fact"
+            }
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "BenefitPatch": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "confirmed_review": {
+            "type": "boolean"
+          },
+          "deadline_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deadline_origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user"
+            ]
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "UsagePut": {
+        "type": "object",
+        "properties": {
+          "used_units": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "used_units",
+          "confirmed_at",
+          "note",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "ThreadCreate": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "vault",
+              "entry",
+              "case"
+            ]
+          },
+          "entry_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "scope",
+          "entry_id",
+          "case_id",
+          "document_ids"
+        ],
+        "additionalProperties": false
+      },
+      "MessageCreate": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "match_need"
+            ]
+          }
+        },
+        "required": [
+          "content",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "MessageAccepted": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/ChatMessage"
+          },
+          "job": {
+            "$ref": "#/components/schemas/Job"
+          }
+        },
+        "required": [
+          "message",
+          "job"
+        ],
+        "additionalProperties": false
+      },
+      "CaseCreate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "benefit_use",
+              "warranty",
+              "insurance_question",
+              "product_return",
+              "refund_delay",
+              "follow_up"
+            ]
+          },
+          "entry_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "benefit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "situation": {
+            "type": "string"
+          },
+          "incident_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "desired_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "entry_ids",
+          "document_ids",
+          "benefit_id",
+          "situation",
+          "incident_date",
+          "desired_result"
+        ],
+        "additionalProperties": false
+      },
+      "CasePatch": {
+        "type": "object",
+        "properties": {
+          "situation": {
+            "type": "string"
+          },
+          "incident_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "desired_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "StatusChange": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "prepared",
+              "submitted",
+              "awaiting_response",
+              "approved",
+              "denied",
+              "resolved"
+            ]
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "approved_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "status",
+          "event_date",
+          "note",
+          "approved_amount_cents",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "EventCreate": {
+        "type": "object",
+        "properties": {
+          "event_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "attachment_document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "event_date",
+          "note",
+          "attachment_document_ids"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyCreate": {
+        "type": "object",
+        "properties": {
+          "reply_text": {
+            "type": "string"
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "reply_text",
+          "document_ids"
+        ],
+        "additionalProperties": false
+      },
+      "DraftCreate": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "initial",
+              "follow_up"
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "DraftPatch": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "expected_input_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "subject",
+          "body",
+          "expected_input_version"
+        ],
+        "additionalProperties": false
+      },
+      "OutcomePut": {
+        "type": "object",
+        "properties": {
+          "benefit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cash_refund",
+              "service_used",
+              "repair",
+              "replacement",
+              "voucher_used",
+              "denied",
+              "closed_without_result"
+            ]
+          },
+          "cash_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimated_value_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value_origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user_estimate",
+              "not_known"
+            ]
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "confirmation_source": {
+            "type": "string",
+            "enum": [
+              "user_reported",
+              "document_supported"
+            ]
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "benefit_id",
+          "kind",
+          "cash_amount_cents",
+          "estimated_value_cents",
+          "value_origin",
+          "quantity",
+          "currency",
+          "confirmation_source",
+          "confirmed_at",
+          "evidence_refs",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "ReminderCreate": {
+        "type": "object",
+        "properties": {
+          "benefit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "local_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "user",
+              "claimly_suggestion"
+            ]
+          },
+          "offset_days": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "enum": [
+                30,
+                14,
+                7,
+                1,
+                0
+              ]
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "in_app",
+                "email"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "done",
+              "cancelled",
+              "needs_review"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            }
+          }
+        },
+        "required": [
+          "benefit_id",
+          "case_id",
+          "title",
+          "date",
+          "timezone",
+          "local_time",
+          "origin",
+          "offset_days",
+          "channels",
+          "status",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      },
+      "ReminderPatch": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "local_time": {
+            "type": "string"
+          },
+          "offset_days": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "enum": [
+                30,
+                14,
+                7,
+                1,
+                0
+              ]
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "in_app",
+                "email"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "done",
+              "cancelled",
+              "needs_review"
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "ProfilePatch": {
+        "type": "object",
+        "properties": {
+          "timezone": {
+            "type": "string"
+          },
+          "email_notification_opt_in": {
+            "type": "boolean"
+          },
+          "reminder_offsets": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "enum": [
+                30,
+                14,
+                7,
+                1,
+                0
+              ]
+            }
+          },
+          "local_notification_time": {
+            "type": "string"
+          },
+          "notification_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "ExtractMultipart": {
+        "type": "object",
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "entry_id",
+          "file"
+        ],
+        "additionalProperties": false
+      },
+      "AnalyzeRequest": {
+        "type": "object",
+        "properties": {
+          "force": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "force"
+        ],
+        "additionalProperties": false
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ]
+          },
+          "service": {
+            "type": "string",
+            "enum": [
+              "backend",
+              "llm"
+            ]
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "contract_version"
+        ],
+        "additionalProperties": false
+      },
+      "DispatchResult": {
+        "type": "object",
+        "properties": {
+          "processed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cancelled": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "processed",
+          "sent",
+          "failed",
+          "cancelled"
+        ],
+        "additionalProperties": false
+      },
+      "DemoSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "session_token": {
+            "type": "string",
+            "minLength": 43
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "session_token",
+          "expires_at"
+        ],
+        "additionalProperties": false
+      },
+      "EvidenceRefEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EvidenceRef"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "FactEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Fact"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "PageEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Page"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DeadlineRuleEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DeadlineRule"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "EntryEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Entry"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DocumentEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "BenefitCandidateEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BenefitCandidate"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "BenefitEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Benefit"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "NextActionEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NextAction"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "AssessmentEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Assessment"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DraftContentEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DraftContent"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DraftEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Draft"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "CaseEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Case"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ThreadEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Thread"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ChatMessageEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ChatMessage"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyAnalysisEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReplyAnalysis"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "CaseEventEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CaseEvent"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "OutcomeEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ReminderEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Reminder"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "NotificationEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Notification"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DashboardEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Dashboard"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ExtractJobResultEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ExtractJobResult"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "AnswerJobResultEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AnswerJobResult"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "AssessmentJobResultEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssessmentJobResult"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DraftJobResultEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DraftJobResult"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyJobResultEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReplyJobResult"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ApiErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ApiError"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "JobEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Job"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DocumentContextEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DocumentContext"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "HistoryMessageEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/HistoryMessage"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "LlmContextEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LlmContext"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ExtractionOutputEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ExtractionOutput"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "LlmAnswerEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LlmAnswer"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "MessageAcceptedEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MessageAccepted"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "StatusChangeEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/StatusChange"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "HealthEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Health"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DispatchResultEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DispatchResult"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DemoSessionEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DemoSession"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "EntryList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "BenefitList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Benefit"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "CaseList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ThreadList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Thread"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ChatMessageList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "DraftList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Draft"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "CaseEventList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseEvent"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "ReminderList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reminder"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "NotificationList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "UploadAccepted": {
+        "type": "object",
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "job": {
+            "$ref": "#/components/schemas/Job"
+          }
+        },
+        "required": [
+          "document",
+          "job"
+        ],
+        "additionalProperties": false
+      },
+      "UploadAcceptedEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UploadAccepted"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "LlmExtractMultipart": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "type": "string",
+            "description": "JSON string conforming to ExtractRequest"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "metadata",
+          "file"
+        ],
+        "additionalProperties": false
+      },
+      "ExtractionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ExtractionOutput"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "contract_version"
+        ],
+        "additionalProperties": false
+      },
+      "AnswerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LlmAnswer"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "contract_version"
+        ],
+        "additionalProperties": false
+      },
+      "AssessmentResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Assessment"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "contract_version"
+        ],
+        "additionalProperties": false
+      },
+      "DraftResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DraftContent"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "contract_version"
+        ],
+        "additionalProperties": false
+      },
+      "ReplyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReplyAnalysis"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "contract_version": {
+            "const": "2.0.0"
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "contract_version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "DemoSession": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Demo-Session",
+        "description": "Automatically created anonymous demo session; no account, email or password."
+      },
+      "ServiceBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "SchedulerBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "file": "entry.json",
+    "schema": "EntryEnvelope"
+  },
+  {
+    "file": "document.json",
+    "schema": "DocumentEnvelope"
+  },
+  {
+    "file": "benefit_unknown.json",
+    "schema": "BenefitEnvelope"
+  },
+  {
+    "file": "benefit_after_one_use.json",
+    "schema": "BenefitEnvelope"
+  },
+  {
+    "file": "job_extract_succeeded.json",
+    "schema": "JobEnvelope"
+  },
+  {
+    "file": "case.json",
+    "schema": "CaseEnvelope"
+  },
+  {
+    "file": "messages.json",
+    "schema": "ChatMessageList"
+  },
+  {
+    "file": "draft.json",
+    "schema": "DraftEnvelope"
+  },
+  {
+    "file": "llm_extraction.json",
+    "schema": "ExtractionResponse"
+  },
+  {
+    "file": "llm_answer_request.json",
+    "schema": "AnswerRequest"
+  },
+  {
+    "file": "llm_answer.json",
+    "schema": "AnswerResponse"
+  },
+  {
+    "file": "assessment.json",
+    "schema": "AssessmentEnvelope"
+  },
+  {
+    "file": "error_ai_not_configured.json",
+    "schema": "ErrorEnvelope"
+  },
+  {
+    "file": "dashboard.json",
+    "schema": "DashboardEnvelope"
+  },
+  {
+    "file": "entry_thread.json",
+    "schema": "ThreadEnvelope"
+  },
+  {
+    "file": "case_thread.json",
+    "schema": "ThreadEnvelope"
+  },
+  {
+    "file": "job_queued.json",
+    "schema": "JobEnvelope"
+  },
+  {
+    "file": "upload_accepted.json",
+    "schema": "UploadAcceptedEnvelope"
+  },
+  {
+    "file": "demo_session_created.json",
+    "schema": "DemoSessionEnvelope"
+  },
+  {
+    "file": "guest_profile.json",
+    "schema": "ProfileEnvelope"
+  }
+]

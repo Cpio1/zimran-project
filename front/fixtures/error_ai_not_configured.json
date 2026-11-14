@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "AI_NOT_CONFIGURED",
+    "message": "AI is not configured.",
+    "retryable": false
+  },
+  "request_id": "sample-request-001"
+}

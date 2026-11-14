@@ -1,0 +1,28 @@
+{
+  "data": {
+    "answer": "The certificate lists four cleaning services. How many have you already used?",
+    "evidence_refs": [
+      {
+        "document_id": "10000000-0000-4000-8000-000000000002",
+        "document_version": 1,
+        "page": 1,
+        "quote": "This certificate includes four dental cleaning services. Valid through December 31, 2026."
+      }
+    ],
+    "matched_benefit_ids": [
+      "10000000-0000-4000-8000-000000000003"
+    ],
+    "questions": [
+      "How many services have you already used?"
+    ],
+    "next_actions": [
+      {
+        "type": "open_benefit",
+        "label": "View certificate",
+        "target_id": "10000000-0000-4000-8000-000000000003"
+      }
+    ]
+  },
+  "request_id": "sample-request-001",
+  "contract_version": "2.0.0"
+}
