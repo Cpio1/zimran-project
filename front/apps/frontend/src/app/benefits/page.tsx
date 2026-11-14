@@ -1,7 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Gift, Search } from "lucide-react";
 import clsx from "clsx";
@@ -12,6 +11,7 @@ import { ButtonLink, EmptyState, ErrorBox, Input, ListSkeleton, PageHeader } fro
 import { daysUntil } from "@/lib/format";
 import { qk } from "@/lib/hooks";
 import { useDebounced } from "@/lib/useDebounced";
+import { useUrlState } from "@/lib/useUrlState";
 
 const FILTERS: { id: string; label: string; test: (b: Benefit) => boolean }[] = [
   { id: "all", label: "All", test: () => true },
@@ -26,9 +26,8 @@ export default function BenefitsPage() {
 }
 
 function BenefitsInner() {
-  const params = useSearchParams();
-  const [filter, setFilter] = useState(params.get("filter") ?? "all");
-  const [q, setQ] = useState("");
+  const [filter, setFilter] = useUrlState("filter", "all");
+  const [q, setQ] = useUrlState("q", "", 250);
   const dq = useDebounced(q.trim());
   const list = useQuery({ queryKey: qk.benefits({ q: dq, all: true }), queryFn: () => listAll((cursor) => api.listBenefits({ q: dq || undefined, cursor, limit: 100 })) });
   const f = FILTERS.find((x) => x.id === filter) ?? FILTERS[0];
@@ -45,7 +44,7 @@ function BenefitsInner() {
         <div role="tablist" aria-label="Filter" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
           {FILTERS.map((x) => (
             <button key={x.id} role="tab" aria-selected={filter === x.id} type="button" onClick={() => setFilter(x.id)}
-              className={clsx("shrink-0 rounded-full px-3 py-1.5 text-sm", filter === x.id ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink")}>
+              className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", filter === x.id ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink")}>
               {x.label}
               {list.data && <span className="ml-1.5 tabular-nums opacity-70">{list.data.filter(x.test).length}</span>}
             </button>

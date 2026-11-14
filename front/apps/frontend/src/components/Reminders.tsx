@@ -104,8 +104,8 @@ export function ReminderModal({ open, onClose, reminder, create }: {
       title={reminder ? "Edit reminder" : "Add reminder"}
       footer={
         <>
-          {reminder && reminder.status !== "cancelled" && <Button variant="danger" className="mr-auto" loading={m.isPending} onClick={() => m.mutate({ status: "cancelled" })}>Turn off</Button>}
-          {reminder && reminder.status === "cancelled" && <Button className="mr-auto" loading={m.isPending} onClick={() => m.mutate({ status: "active" })}>Turn back on</Button>}
+          {reminder && reminder.status !== "cancelled" && <Button variant="subtleDanger" className="sm:mr-auto" loading={m.isPending} onClick={() => m.mutate({ status: "cancelled" })}>Turn off</Button>}
+          {reminder && reminder.status === "cancelled" && <Button variant="ghost" className="sm:mr-auto" loading={m.isPending} onClick={() => m.mutate({ status: "active" })}>Turn back on</Button>}
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant="primary" disabled={!valid} loading={m.isPending} onClick={() => m.mutate(reminder?.status === "needs_review" ? { status: "active" } : {})}>
             {reminder?.status === "needs_review" ? "Confirm and save" : "Save"}

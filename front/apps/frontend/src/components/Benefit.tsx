@@ -9,9 +9,9 @@ import clsx from "clsx";
 import { api } from "@/api/client";
 import { ApiError } from "@/api/errors";
 import type { Benefit } from "@/api/types";
-import { BENEFIT_TYPE_LABEL, USAGE_LABEL, formatCents, formatDate, usageSummary } from "@/lib/format";
+import { BENEFIT_TYPE_LABEL, USAGE_LABEL, formatCents, formatDate, parseCount, usageSummary } from "@/lib/format";
 import { ensureThread, invalidate, qk } from "@/lib/hooks";
-import { Badge, Button, Card, ErrorBox, Field, Input, Modal, NeedsReview, Notice, Textarea } from "./ui";
+import { Badge, Button, Card, ErrorBox, Field, Input, Modal, NeedsReview, Notice, Textarea, parsedField } from "./ui";
 import { useToast } from "./Toast";
 
 export function UsageMeter({ b }: { b: Benefit }) {
@@ -34,9 +34,9 @@ export function UsageMeter({ b }: { b: Benefit }) {
 
 export function UsageNumbers({ b }: { b: Benefit }) {
   const cell = (label: string, v: number | null, hint?: string) => (
-    <div className="rounded-lg bg-stone-50 px-3 py-2">
+    <div className="min-w-0 rounded-lg bg-stone-50 px-3 py-2">
       <dt className="text-xs text-muted">{label}</dt>
-      <dd className="text-lg font-semibold tabular-nums">{v === null ? <span className="text-sm font-normal text-muted">{hint ?? "Not known"}</span> : v}</dd>
+      <dd className="text-lg font-semibold tabular-nums">{v === null ? <span className="block text-sm font-normal leading-snug text-muted [overflow-wrap:anywhere]">{hint ?? "Not known"}</span> : v}</dd>
     </div>
   );
   return (
@@ -58,7 +58,7 @@ export function BenefitCard({ b, compact }: { b: Benefit; compact?: boolean }) {
         {b.needs_review && <NeedsReview />}
       </div>
       <div className="min-w-0">
-        <h3 className="font-semibold leading-snug">
+        <h3 className="font-semibold leading-snug [overflow-wrap:anywhere]">
           <Link href={`/benefits/${b.id}`} className="hover:underline">{b.title}</Link>
         </h3>
         {!compact && <p className="mt-1 line-clamp-2 text-sm text-muted">{b.description}</p>}
@@ -95,7 +95,12 @@ export function useAskAboutEntry() {
   return { ask, busy };
 }
 
-export function BenefitActions({ b, onChanged }: { b: Benefit; onChanged?: (b: Benefit) => void }) {
+/**
+ * Benefit actions. `show` lets a page place each action next to the content it acts on (Fitts):
+ * "Mark used" beside the usage numbers, "Plan to use" + "Ask Claimly" in the next-step block.
+ * "Plan to use" is the one main action wherever it appears.
+ */
+export function BenefitActions({ b, onChanged, show = ["plan", "ask", "mark"], planPrimary = true }: { b: Benefit; onChanged?: (b: Benefit) => void; show?: ("plan" | "ask" | "mark")[]; planPrimary?: boolean }) {
   const [markOpen, setMarkOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const { ask, busy } = useAskAboutEntry();
@@ -103,12 +108,12 @@ export function BenefitActions({ b, onChanged }: { b: Benefit; onChanged?: (b: B
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        <Button variant="primary" icon={<ClipboardList className="size-4" aria-hidden />} onClick={() => setPlanOpen(true)}>Plan to use</Button>
-        <Button icon={<MessageCircle className="size-4" aria-hidden />} loading={busy} onClick={() => ask(b.entry_id, docIds)}>Ask Claimly</Button>
-        <Button icon={<CheckCheck className="size-4" aria-hidden />} onClick={() => setMarkOpen(true)}>Mark used</Button>
+        {show.includes("plan") && <Button variant={planPrimary ? "primary" : "secondary"} icon={<ClipboardList className="size-4" aria-hidden />} onClick={() => setPlanOpen(true)}>Plan to use</Button>}
+        {show.includes("ask") && <Button icon={<MessageCircle className="size-4" aria-hidden />} loading={busy} onClick={() => ask(b.entry_id, docIds)}>Ask Claimly</Button>}
+        {show.includes("mark") && <Button icon={<CheckCheck className="size-4" aria-hidden />} onClick={() => setMarkOpen(true)}>Mark used</Button>}
       </div>
-      <MarkUsedDialog open={markOpen} onClose={() => setMarkOpen(false)} benefit={b} onSaved={onChanged} />
-      <PlanToUseDialog open={planOpen} onClose={() => setPlanOpen(false)} benefit={b} documentIds={docIds} />
+      {show.includes("mark") && <MarkUsedDialog open={markOpen} onClose={() => setMarkOpen(false)} benefit={b} onSaved={onChanged} />}
+      {show.includes("plan") && <PlanToUseDialog open={planOpen} onClose={() => setPlanOpen(false)} benefit={b} documentIds={docIds} />}
     </>
   );
 }
@@ -147,9 +152,12 @@ export function MarkUsedDialog({ open, onClose, benefit, onSaved }: { open: bool
     setValue(String(fresh.used_units ?? ""));
     m.reset();
   };
-  const n = Number(value);
   const max = current.units_total;
-  const invalid = value === "" || !Number.isInteger(n) || n < 0 || (max !== null && n > max);
+  // Postel: " 2 ", "1,000" and "2.0" are fine; the field explains anything else and keeps the text.
+  const parsed = parseCount(value, max);
+  const n = parsed.kind === "ok" ? parsed.value : NaN;
+  const invalid = parsed.kind !== "ok";
+  const feedback = parsedField(value, parsed, setValue);
 
   return (
     <Modal
@@ -176,8 +184,8 @@ export function MarkUsedDialog({ open, onClose, benefit, onSaved }: { open: bool
             Enter the <strong className="text-ink">total number you&apos;ve used so far</strong>, including earlier uses — not just today&apos;s.
             {max !== null ? ` The document lists ${max}.` : " The document doesn't state a total, so Claimly won't calculate what's left."}
           </p>
-          <Field label="Total used so far" htmlFor="used-units" error={value !== "" && invalid ? (max !== null ? `Enter a whole number from 0 to ${max}.` : "Enter a whole number, 0 or more.") : null}>
-            <Input id="used-units" type="number" inputMode="numeric" min={0} max={max ?? undefined} step={1} value={value} onChange={(e) => setValue(e.target.value)} data-autofocus />
+          <Field label="Total used so far" htmlFor="used-units" error={feedback.error} hint={feedback.hint}>
+            <Input id="used-units" type="text" inputMode="numeric" autoComplete="off" value={value} onChange={(e) => setValue(e.target.value)} data-autofocus />
           </Field>
           <Field label="Note (optional)" htmlFor="used-note">
             <Input id="used-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Cleaning on Nov 10" />

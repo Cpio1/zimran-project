@@ -5,10 +5,10 @@ import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { Check, Eye, FileText, Pencil, RotateCw, Trash2 } from "lucide-react";
 import { api } from "@/api/client";
 import type { Document, Entry, Fact } from "@/api/types";
-import { DOC_STATUS_LABEL, formatDate } from "@/lib/format";
+import { DOC_STATUS_LABEL, formatDate, parseCount, parseLooseDate, parseMoney, type Parsed } from "@/lib/format";
 import { invalidate, qk } from "@/lib/hooks";
 import { EvidenceChips, useOpenEvidence } from "./Evidence";
-import { Badge, Button, ErrorBox, Input, Modal, NeedsReview, Notice } from "./ui";
+import { Badge, Button, ErrorBox, Field, Input, Menu, Modal, NeedsReview, Notice, Skeleton, parsedField } from "./ui";
 import { useToast } from "./Toast";
 
 export const humanizeKey = (k: string) => k.replace(/_cents$/, "").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
@@ -19,6 +19,29 @@ export function formatFactValue(key: string, v: Fact["value"]): string {
   if (typeof v === "number" && key.endsWith("_cents")) return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v / 100);
   if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return formatDate(v) ?? v;
   return String(v);
+}
+
+type FactKind = "money" | "date" | "number" | "text";
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+function factKind(key: string, v: Fact["value"]): FactKind {
+  if (key.endsWith("_cents")) return "money";
+  if (typeof v === "number") return "number";
+  if ((typeof v === "string" && ISO.test(v)) || /(^|_)(date|until|through|expires?|expiry|ends?)($|_)/.test(key)) return "date";
+  return "text";
+}
+/** What the edit field starts with: the value as a person would type it. */
+function editText(kind: FactKind, v: Fact["value"]) {
+  if (v === null) return "";
+  if (kind === "money" && typeof v === "number") return (v / 100).toFixed(2);
+  return String(v);
+}
+/** Postel: lenient parse per kind; text is taken as typed (trimmed). */
+function parseFact(kind: FactKind, raw: string): Parsed<Fact["value"]> {
+  if (kind === "money") return parseMoney(raw);
+  if (kind === "date") return parseLooseDate(raw);
+  if (kind === "number") return parseCount(raw);
+  const t = raw.trim();
+  return t ? { kind: "ok", value: t, display: t } : { kind: "empty" };
 }
 
 const ORIGIN: Record<Fact["origin"], string> = { document: "From document", user: "Edited by you", calculated: "Calculated" };
@@ -46,9 +69,9 @@ export function FactsList({ entry, editable }: { entry: Entry; editable?: boolea
   if (!entries.length) return <p className="text-sm text-muted">No key details extracted yet.</p>;
 
   const save = (key: string, f: Fact) => {
-    const raw = value.trim();
-    const v: Fact["value"] = raw === "" ? null : typeof f.value === "number" && !Number.isNaN(Number(raw)) ? Number(raw) : raw;
-    m.mutate({ [key]: { value: v, origin: "user", evidence_refs: [], needs_review: false } });
+    const p = parseFact(factKind(key, f.value), value);
+    if (p.kind === "invalid" || p.kind === "ambiguous") return; // the field explains; the text stays
+    m.mutate({ [key]: { value: p.kind === "ok" ? p.value : null, origin: "user", evidence_refs: [], needs_review: false } });
   };
 
   return (
@@ -59,13 +82,24 @@ export function FactsList({ entry, editable }: { entry: Entry; editable?: boolea
           <li key={key} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start">
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted">{humanizeKey(key)}</p>
-              {editing === key ? (
-                <form className="mt-1 flex gap-2" onSubmit={(e) => { e.preventDefault(); save(key, f); }}>
-                  <Input aria-label={humanizeKey(key)} value={value} onChange={(e) => setValue(e.target.value)} autoFocus placeholder={typeof f.value === "string" && /^\d{4}-/.test(f.value) ? "YYYY-MM-DD" : ""} />
-                  <Button type="submit" size="md" variant="primary" loading={m.isPending}>Save</Button>
-                  <Button size="md" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
-                </form>
-              ) : (
+              {editing === key ? (() => {
+                const kind = factKind(key, f.value);
+                const feedback = parsedField(value, parseFact(kind, value), setValue);
+                return (
+                  // Jakob: Enter saves, Escape cancels.
+                  <form className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-start" onSubmit={(e) => { e.preventDefault(); save(key, f); }} onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setEditing(null); } }}>
+                    <div className="min-w-0 flex-1">
+                      <Field label={humanizeKey(key)} hideLabel htmlFor={`fact-${key}`} error={feedback.error} hint={feedback.hint}>
+                        <Input id={`fact-${key}`} value={value} onChange={(e) => setValue(e.target.value)} autoFocus inputMode={kind === "money" ? "decimal" : kind === "number" ? "numeric" : undefined} placeholder={kind === "date" ? "e.g. Dec 31, 2026" : kind === "money" ? "e.g. 129.99" : ""} />
+                      </Field>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" size="md" variant="primary" loading={m.isPending}>Save</Button>
+                      <Button size="md" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+                    </div>
+                  </form>
+                );
+              })() : (
                 <p className="font-medium">{formatFactValue(key, f.value)}</p>
               )}
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -79,7 +113,7 @@ export function FactsList({ entry, editable }: { entry: Entry; editable?: boolea
                 {f.needs_review && (
                   <Button size="sm" icon={<Check className="size-3.5" aria-hidden />} onClick={() => m.mutate({ [key]: { ...f, needs_review: false } })}>Looks right</Button>
                 )}
-                <Button size="sm" variant="ghost" icon={<Pencil className="size-3.5" aria-hidden />} onClick={() => { setEditing(key); setValue(f.value === null ? "" : String(f.value)); }}>Edit</Button>
+                <Button size="sm" variant="ghost" icon={<Pencil className="size-3.5" aria-hidden />} onClick={() => { setEditing(key); setValue(editText(factKind(key, f.value), f.value)); }}>Edit</Button>
               </div>
             )}
           </li>
@@ -116,13 +150,13 @@ export function DocumentList({ entry, docs, allowDelete }: { entry: Entry; docs:
         {docs.map((q, i) => {
           const d = q.data;
           if (q.isError) return <li key={entry.document_ids[i]} className="py-3 text-sm text-muted">A document is unavailable.</li>;
-          if (!d) return <li key={entry.document_ids[i]} className="py-3 text-sm text-muted">Loading…</li>;
+          if (!d) return <li key={entry.document_ids[i]} className="flex items-center gap-3 py-3" aria-busy="true" aria-label="Loading document"><Skeleton className="size-5" /><Skeleton className="h-4 flex-1" /></li>;
           return (
             <li key={d.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <FileText className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{d.name}</p>
+                  <p className="line-clamp-2 text-sm font-medium [overflow-wrap:anywhere]" title={d.name}>{d.name}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
                     <Badge tone={d.status === "failed" ? "danger" : d.status === "needs_review" ? "warn" : d.status === "ready" ? "brand" : "info"}>{DOC_STATUS_LABEL[d.status]}</Badge>
                     {d.page_count !== null && <span>{d.page_count} page{d.page_count === 1 ? "" : "s"}</span>}
@@ -131,10 +165,12 @@ export function DocumentList({ entry, docs, allowDelete }: { entry: Entry; docs:
                   {d.review_flags.length > 0 && <ul className="mt-1.5 list-disc pl-4 text-xs text-amber-800">{d.review_flags.map((f) => <li key={f}>{f}</li>)}</ul>}
                 </div>
               </div>
-              <div className="flex gap-1">
+              {/* Fitts + Hick: the document's actions sit on its row; the common one is visible,
+                  the destructive one waits in "More". A failed analysis keeps its fix visible. */}
+              <div className="flex items-center gap-2 pl-8 sm:pl-0">
                 <Button size="sm" icon={<Eye className="size-3.5" aria-hidden />} onClick={() => open({ document_id: d.id, document_version: d.version, page: 1, quote: "" })}>View</Button>
                 {d.status === "failed" && <Button size="sm" icon={<RotateCw className="size-3.5" aria-hidden />} loading={analyze.isPending} onClick={() => analyze.mutate(d.id)}>Analyze again</Button>}
-                {allowDelete && <Button size="sm" variant="ghost" aria-label={`Delete ${d.name}`} onClick={() => setConfirm(d)}><Trash2 className="size-4" aria-hidden /></Button>}
+                {allowDelete && <Menu label={`More actions for ${d.name}`} items={[{ label: "Delete document", icon: Trash2, danger: true, onSelect: () => setConfirm(d) }]} />}
               </div>
             </li>
           );

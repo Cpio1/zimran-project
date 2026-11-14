@@ -23,9 +23,18 @@ body {
   font-family: var(--font-sans);
   overflow-x: hidden;
 }
+/* Keyboard focus: a clear 2 px ring with a gap, plus a soft halo, on every surface. On dark
+   surfaces (toasts) the ring turns white. Mouse clicks don't show it (:focus-visible). */
 :focus-visible {
-  outline: 2px solid var(--color-brand-500);
+  outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
+}
+/* Fields draw their own focus (border + ring), so they don't get a second outline. */
+:is(input:not([type="checkbox"], [type="radio"]), textarea, select):focus-visible {
+  outline: none;
+}
+.on-dark :focus-visible {
+  outline-color: white;
 }
 dialog::backdrop {
   background: rgb(15 20 25 / 0.45);
@@ -41,56 +50,102 @@ dialog::backdrop {
   .animate-indeterminate, .animate-spin, .animate-pulse { animation: none; }
 }
 
-/* ------------------------------------------------------------------
-   Squash & stretch micro-motion (see components/motion.tsx).
-   Small amplitude, 90–340 ms, quick settle. Only transform/opacity
-   animate, so layout and hit areas never change. Whenever one axis
-   squashes the other stretches, keeping the perceived volume.
-   ------------------------------------------------------------------ */
+/* ==================================================================
+   Motion system.
+
+   Every effect is a few key poses with a duration and an easing; the browser computes the
+   frames in between (pose to pose).
+     - transition  → an effect with two states (pressed ↔ rest, quiet ↔ focus);
+     - @keyframes  → a sequence: wind-up (anticipation) → main move → follow-through → settle.
+
+   Rules shared by every effect:
+     Snappy timing   — a whole sequence, wind-up and follow-through included, is ≤ 300 ms.
+                        Handlers, navigation and requests never wait for it.
+     Slow in/out     — ease-out to appear, ease-in to leave, ease-in-out to move between states;
+                        inside a keyframe sequence each segment sets its own curve.
+     Arcs            — small icons travel along short curves (several keyframes on `translate`);
+                        text, fields and large containers never move.
+     Squash/stretch  — volume-preserving `scale` poses.
+     One transform channel per job — moves use `translate`, squash and pops use `scale`, press
+                        feedback uses `transform`. Independent properties compose instead of
+                        overriding each other, so a press during a cue or a nudge never cancels it.
+     Staging         — one attention cue at a time (useStageCue in motion.tsx).
+   Only transform-family properties and opacity animate; one decorative box-shadow halo aside.
+   ================================================================== */
 :root {
-  --motion-press: 90ms;
-  --motion-release: 320ms;
-  --motion-pop: 340ms;
-  --ease-press: cubic-bezier(0.2, 0.7, 0.3, 1);
-  /* Fallback spring: a single mild overshoot. */
+  /* Durations — keep in sync with the constants in motion.tsx and Toast.tsx */
+  --dur-press: 80ms;         /* rest → pressed (button press 80–140 ms) */
+  --dur-release: 140ms;      /* pressed → rebound → rest (follow-through) */
+  --dur-state: 180ms;        /* card / disclosure state change (140–220 ms) */
+  --dur-enter: 240ms;        /* dialog / toast appear (180–280 ms) */
+  --dur-exit: 160ms;         /* toast leave */
+  --dur-nudge: 260ms;        /* anticipation nudge of a directional icon */
+  --dur-arc: 280ms;          /* an icon travelling along an arc and landing */
+  --dur-confirm: 280ms;      /* confirmation: status icon pop + contrast flash */
+  --dur-cue: 280ms;          /* staging cue (CUE_MS in motion.tsx) */
+  --dur-fade: 120ms;         /* reduced-motion replacement */
+
+  /* Amplitudes */
+  --pose-press: scale(1.03, 0.97);          /* main button held: flatter and wider */
+  --pose-press-soft: scale(1.015, 0.985);   /* secondary controls: half the amplitude */
+  --pose-press-icon: scale(1.1, 0.88);      /* icon-only control: just the glyph */
+  --amp-confirm: 1.05;                       /* confirmation peak */
+  --amp-cue: 1.03;                           /* staging cue peak */
+
+  /* Easings — slow in & slow out */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);         /* appear, press: fast start, soft stop */
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);          /* leave: soft start, quick finish */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);      /* move between two resting states */
+  --ease-press: var(--ease-out);
+  /* Fallbacks for browsers without linear(): one mild overshoot / one dip below 0. */
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
-  /* Anticipation: ~25% wind-up (≈75 ms of 290 ms) then the main move (≈215 ms). */
-  --motion-anticipate: 290ms;
-  /* Fallback "back" curve: dips below 0 first, then a slight overshoot. */
   --ease-anticipate: cubic-bezier(0.45, -0.4, 0.3, 1.25);
+
+  /* Back-compat aliases */
+  --motion-press: var(--dur-press);
+  --motion-release: var(--dur-release);
+  --motion-pop: var(--dur-confirm);
+  --motion-anticipate: var(--dur-nudge);
 }
 @supports (transition-timing-function: linear(0, 1)) {
   :root {
-    /* Damped spring: ~8% overshoot, one rebound, settles fast. Safari 17.2+, Chrome 113+. */
-    --ease-spring: linear(0, 0.21 6%, 0.62 15%, 0.95 25%, 1.07 33%, 1.08 38%, 1.04 47%, 0.99 60%, 0.995 75%, 1);
-    /* Wind-up below 0 for the first ~26%, then a damped move with a small overshoot. */
-    --ease-anticipate: linear(0, -0.05 8%, -0.11 17%, -0.12 22%, -0.08 27%, 0.18 37%, 0.62 50%, 0.95 62%, 1.05 72%, 1.03 84%, 1);
+    /* Damped spring: ~6% overshoot, one small rebound, settles fast. Safari 17.2+, Chrome 113+. */
+    --ease-spring: linear(0, 0.25 7%, 0.7 18%, 0.98 30%, 1.06 40%, 1.05 50%, 1.01 65%, 0.995 80%, 1);
+    /* Short wind-up below 0, then a damped move with a small overshoot. */
+    --ease-anticipate: linear(0, -0.06 10%, -0.1 20%, -0.06 27%, 0.25 40%, 0.7 55%, 1.04 72%, 1.02 86%, 1);
   }
 }
 
-/* Button/ButtonLink background layer. The label sits above it and does not transform. */
+/* ── Button: rest → light squash on press → springy rebound → rest ──────────────────────
+   Two states, so a transition: press = 80 ms ease-out; release = 140 ms spring, whose overshoot
+   is the follow-through. A press that lands mid-release retargets from the in-flight value, so
+   rapid taps never jump. The label never transforms, only the background layer does. */
 .squish-surface {
   transform-origin: 50% 50%;
   transition:
-    transform var(--motion-release) var(--ease-spring),
-    background-color 150ms ease,
-    border-color 150ms ease;
+    transform var(--dur-release) var(--ease-spring),
+    background-color var(--dur-state) var(--ease-in-out),
+    border-color var(--dur-state) var(--ease-in-out);
   backface-visibility: hidden; /* avoids a 1px shimmer in Safari while scaling */
 }
 [data-pressed] > .squish-surface {
-  transform: scale(1.03, 0.97);
-  transition-duration: var(--motion-press), 150ms, 150ms;
-  transition-timing-function: var(--ease-press), ease, ease;
+  transform: var(--pose-press-soft);
+  transition-duration: var(--dur-press), var(--dur-state), var(--dur-state);
+  transition-timing-function: var(--ease-press), var(--ease-in-out), var(--ease-in-out);
+}
+/* Staging: the full squash belongs to the main action; secondary controls answer more quietly. */
+[data-pressed][data-variant="primary"] > .squish-surface {
+  transform: var(--pose-press);
 }
 
 /* Icon-only controls: only the glyph squashes; the button box and hit area stay fixed. */
 .squish-icon > svg {
   transform-origin: 50% 50%;
-  transition: transform var(--motion-release) var(--ease-spring);
+  transition: transform var(--dur-release) var(--ease-spring);
 }
 .squish-icon[data-pressed] > svg {
-  transform: scale(1.1, 0.88);
-  transition-duration: var(--motion-press);
+  transform: var(--pose-press-icon);
+  transition-duration: var(--dur-press);
   transition-timing-function: var(--ease-press);
 }
 
@@ -99,65 +154,129 @@ dialog::backdrop {
   touch-action: manipulation; /* no double-tap zoom delay on rapid taps */
 }
 
-/* Upload drop zone: the icon stretches upward while a file is dragged over… */
+/* ── Upload drop zone icon ──────────────────────────────────────────────────────────────
+   Drag over: wind-up dip → stretch up toward the file → hold. Drag leave: spring back (two
+   states). Drop: squash on landing → rebound → settle, restarted on every drop by remounting. */
 .drop-icon {
   display: block;
   transform-origin: 50% 100%;
-  transition: transform 240ms var(--ease-spring);
+  transition: translate var(--dur-state) var(--ease-in-out), scale var(--dur-state) var(--ease-spring);
 }
 [data-dragging] .drop-icon {
-  transform: translateY(-3px) scale(0.94, 1.08);
-  animation: drop-lift var(--motion-anticipate) var(--ease-press);
+  translate: 0 -3px;
+  scale: 0.94 1.08;
+  animation: drop-lift var(--dur-arc) both;
 }
-/* Anticipation: the icon dips and squashes before it lifts toward the dragged file. */
 @keyframes drop-lift {
-  0% { transform: none; }
-  26% { transform: translateY(1.5px) scale(1.06, 0.94); }
-  70% { transform: translateY(-3.5px) scale(0.93, 1.09); }
-  100% { transform: translateY(-3px) scale(0.94, 1.08); }
+  0% { translate: 0 0; scale: 1; animation-timing-function: var(--ease-out); }
+  25% { translate: 0 1.5px; scale: 1.06 0.94; animation-timing-function: var(--ease-in-out); }  /* wind-up */
+  70% { translate: 0 -3.5px; scale: 0.93 1.09; animation-timing-function: var(--ease-out); }    /* reach */
+  100% { translate: 0 -3px; scale: 0.94 1.08; }                                                  /* hold */
 }
-/* …and squashes as the file lands, then settles back. */
 @keyframes squish-drop {
-  0% { transform: none; }
-  35% { transform: translateY(1px) scale(1.12, 0.88); }
-  65% { transform: translateY(0) scale(0.97, 1.03); }
-  100% { transform: none; }
+  0% { scale: 1; animation-timing-function: var(--ease-out); }
+  35% { scale: 1.12 0.88; animation-timing-function: var(--ease-in-out); }  /* land: squash */
+  70% { scale: 0.97 1.03; animation-timing-function: var(--ease-out); }     /* follow-through */
+  100% { scale: 1; }                                                         /* settle */
 }
 .squish-drop {
-  animation: squish-drop 320ms var(--ease-press);
+  transform-origin: 50% 100%;
+  animation: squish-drop var(--dur-arc) both;
 }
 
-/* A newly added file's icon first lifts slightly (away from its target), then drops in
-   stretched and lands with a squash. */
+/* ── Document icon arriving in the file list: an arc ────────────────────────────────────
+   It starts up-left of its slot, rises a little (wind-up), arcs down into place, lands with a
+   squash and settles. Only the 20 px icon travels; the row's text never moves. */
 @keyframes squish-land {
-  0% { opacity: 0; transform: translateY(-6px) scale(0.96, 1.04); }
-  22% { opacity: 0.6; transform: translateY(-8.5px) scale(1.04, 0.96); }
-  58% { opacity: 1; transform: translateY(0) scale(1.1, 0.9); }
-  80% { transform: scale(0.97, 1.03); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; translate: -6px -2px; scale: 0.96 1.04; animation-timing-function: var(--ease-out); }
+  25% { opacity: 0.7; translate: -4px -7px; scale: 1; animation-timing-function: var(--ease-in-out); }  /* top of the arc */
+  62% { opacity: 1; translate: 0 0; scale: 1.08 0.92; animation-timing-function: var(--ease-out); }      /* land */
+  84% { scale: 0.98 1.02; }                                                                             /* follow-through */
+  100% { opacity: 1; translate: 0 0; scale: 1; }
 }
 .squish-land {
   transform-origin: 50% 100%;
-  animation: squish-land 330ms var(--ease-press) both;
+  animation: squish-land var(--dur-arc) both;
 }
 
-/* Confirmed success: a short wind-up (the mark gathers and squashes down), then it pops
-   up with one elastic wobble. */
+/* Upload starting: the document icon leans back and down, then arcs up toward the server
+   and comes back to rest. */
+@keyframes send-arc {
+  0% { translate: 0 0; scale: 1; animation-timing-function: var(--ease-out); }
+  25% { translate: -1px 2px; scale: 1.05 0.94; animation-timing-function: var(--ease-in-out); }  /* wind-up */
+  55% { translate: 1.5px -4px; scale: 0.95 1.06; animation-timing-function: var(--ease-in-out); } /* arc up */
+  80% { translate: 0.5px -1px; scale: 1; animation-timing-function: var(--ease-out); }           /* follow-through */
+  100% { translate: 0 0; scale: 1; }
+}
+.anticipate-send {
+  animation: send-arc var(--dur-arc) both;
+}
+
+/* ── Confirmation (exaggerated, but calm) ───────────────────────────────────────────────
+   Only after a confirmed success: the status icon grows from 0.85 to 1.05, springs back to 1,
+   and a soft disc of its own colour flashes behind it for extra contrast. */
 @keyframes squish-pop {
-  0% { opacity: 0; transform: scale(0.8); }
-  24% { opacity: 0.7; transform: translateY(1px) scale(0.72, 0.62); }
-  60% { opacity: 1; transform: scale(1.12, 0.9); }
-  82% { transform: scale(0.96, 1.04); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; scale: 0.85; animation-timing-function: var(--ease-out); }
+  55% { opacity: 1; scale: var(--amp-confirm); animation-timing-function: var(--ease-in-out); }  /* peak */
+  80% { scale: 0.99; animation-timing-function: var(--ease-out); }                               /* follow-through */
+  100% { opacity: 1; scale: 1; }
 }
 .squish-pop {
   transform-origin: 50% 50%;
-  animation: squish-pop var(--motion-pop) var(--ease-press) both;
+  animation: squish-pop var(--dur-confirm) both;
+}
+@keyframes confirm-flash {
+  0% { opacity: 0; scale: 0.6; animation-timing-function: var(--ease-out); }
+  40% { opacity: 0.22; scale: 1.25; animation-timing-function: var(--ease-in); }
+  100% { opacity: 0; scale: 1.5; }
+}
+.status-confirm {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.status-confirm::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  animation: confirm-flash var(--dur-confirm) both;
+  animation-delay: inherit;
 }
 
-/* Anticipation nudges for directional icons (triggered by PressFeedback). The icon steps back
-   ~2.5px against its direction, compressing slightly, then moves ~3px forward stretched and
-   settles. Only the glyph moves; text, box and hit area stay still. */
+/* ── Toast and dialog: appear (offset, transparent) → steady → leave ─────────────────────
+   Toasts are shown one at a time (Toast.tsx); hovering or focusing one pauses its timer. */
+@keyframes motion-enter {
+  0% { opacity: 0; translate: 0 8px; scale: 0.98; }
+  100% { opacity: 1; translate: 0 0; scale: 1; }
+}
+@keyframes motion-exit {
+  0% { opacity: 1; translate: 0 0; }
+  100% { opacity: 0; translate: 0 4px; }
+}
+.toast-in,
+.dialog-in {
+  animation: motion-enter var(--dur-enter) var(--ease-out) both;
+}
+.toast-out {
+  animation: motion-exit var(--dur-exit) var(--ease-in) both;
+}
+/* Errors appear calmly: a short fade and a 2 px settle; text, border and icon carry the meaning. */
+@keyframes feedback-in {
+  0% { opacity: 0; translate: 0 -2px; }
+  100% { opacity: 1; translate: 0 0; }
+}
+.feedback-in {
+  animation: feedback-in var(--dur-state) var(--ease-out) both;
+}
+
+/* ── Anticipation for directional icons (triggered by PressFeedback) ────────────────────
+   rest → step back against the direction, compressing → forward, stretched → rest. Uses
+   translate/scale, so it composes with an icon control's press squash. Not restarted while it
+   is still playing, so rapid taps don't jitter. */
 [data-anticipate] {
   transform-origin: 50% 50%;
 }
@@ -165,36 +284,34 @@ span[data-anticipate] {
   display: inline-block; /* text arrows (e.g. "←") need a box to transform */
 }
 @keyframes antic-right {
-  0% { transform: none; }
-  26% { transform: translateX(-2.5px) scale(0.92, 1.06); }
-  62% { transform: translateX(3px) scale(1.06, 0.95); }
-  100% { transform: none; }
+  0% { translate: 0 0; scale: 1; animation-timing-function: var(--ease-out); }
+  26% { translate: -2.5px 0; scale: 0.92 1.06; animation-timing-function: var(--ease-in-out); }
+  62% { translate: 3px 0; scale: 1.06 0.95; animation-timing-function: var(--ease-out); }
+  100% { translate: 0 0; scale: 1; }
 }
 @keyframes antic-left {
-  0% { transform: none; }
-  26% { transform: translateX(2.5px) scale(0.92, 1.06); }
-  62% { transform: translateX(-3px) scale(1.06, 0.95); }
-  100% { transform: none; }
+  0% { translate: 0 0; scale: 1; animation-timing-function: var(--ease-out); }
+  26% { translate: 2.5px 0; scale: 0.92 1.06; animation-timing-function: var(--ease-in-out); }
+  62% { translate: -3px 0; scale: 1.06 0.95; animation-timing-function: var(--ease-out); }
+  100% { translate: 0 0; scale: 1; }
 }
 @keyframes antic-up {
-  0% { transform: none; }
-  26% { transform: translateY(2.5px) scale(1.06, 0.92); }
-  62% { transform: translateY(-3px) scale(0.95, 1.06); }
-  100% { transform: none; }
+  0% { translate: 0 0; scale: 1; animation-timing-function: var(--ease-out); }
+  26% { translate: 0 2.5px; scale: 1.06 0.92; animation-timing-function: var(--ease-in-out); }
+  62% { translate: 0 -3px; scale: 0.95 1.06; animation-timing-function: var(--ease-out); }
+  100% { translate: 0 0; scale: 1; }
 }
-[data-anticipate="right"][data-anticipate-play] { animation: antic-right var(--motion-anticipate) var(--ease-press); }
-[data-anticipate="left"][data-anticipate-play] { animation: antic-left var(--motion-anticipate) var(--ease-press); }
-[data-anticipate="up"][data-anticipate-play],
-.anticipate-send { animation: antic-up var(--motion-anticipate) var(--ease-press); }
+[data-anticipate="right"][data-anticipate-play] { animation: antic-right var(--dur-nudge) both; }
+[data-anticipate="left"][data-anticipate-play] { animation: antic-left var(--dur-nudge) both; }
+[data-anticipate="up"][data-anticipate-play] { animation: antic-up var(--dur-nudge) both; }
 
-/* Disclosure chevron: the anticipation curve turns it a few degrees backwards before it
-   rotates open (and the mirror image when closing). */
+/* Disclosure chevron (two states): the anticipation curve turns it back a few degrees, then open. */
 .details-chevron {
   transform-origin: 50% 50%;
-  transition: transform var(--motion-anticipate) var(--ease-anticipate);
+  transition: rotate var(--dur-state) var(--ease-anticipate);
 }
 details[open] > summary .details-chevron {
-  transform: rotate(90deg);
+  rotate: 90deg;
 }
 summary.details-summary {
   list-style: none;
@@ -203,28 +320,171 @@ summary.details-summary::-webkit-details-marker {
   display: none;
 }
 
+/* ── Staging ───────────────────────────────────────────────────────────────────────────
+   Card tone changes (quiet ↔ default ↔ focus) are a 180 ms ease-in-out transition. The focus
+   accent is static, so the hierarchy holds with reduced motion too. An element that *becomes*
+   the next action plays one 280 ms cue (data-stage-cue), at most one at a time:
+     button: wind-up → slightly past full size → settle, with a fading halo;
+     card:   only the halo (big blocks don't scale). */
+[data-tone] {
+  transition:
+    border-color var(--dur-state) var(--ease-in-out),
+    background-color var(--dur-state) var(--ease-in-out),
+    box-shadow var(--dur-state) var(--ease-in-out);
+}
+.stage-focus {
+  box-shadow: 0 0 0 1px var(--color-brand-100), 0 10px 28px -16px rgb(23 112 95 / 0.45);
+}
+@keyframes stage-cue {
+  0% { scale: 1; animation-timing-function: var(--ease-out); }
+  22% { scale: 0.98; animation-timing-function: var(--ease-in-out); }   /* wind-up */
+  60% { scale: var(--amp-cue); animation-timing-function: var(--ease-out); }  /* past full size */
+  100% { scale: 1; }                                                     /* settle */
+}
+@keyframes stage-halo {
+  0% { box-shadow: 0 0 0 0 rgb(31 138 118 / 0.4); }
+  100% { box-shadow: 0 0 0 8px rgb(31 138 118 / 0); }
+}
+/* `scale` here, `transform` for the press: a press during the cue still squashes. */
+[data-stage-cue] > .squish-surface {
+  animation:
+    stage-cue var(--dur-cue) both,
+    stage-halo var(--dur-cue) var(--ease-out);
+}
+[data-stage-cue][data-tone] {
+  animation: stage-halo var(--dur-cue) var(--ease-out);
+}
+
+/* ── Errors: text + border + icon ───────────────────────────────────────────────────────── */
+[data-invalid] :is(input, select, textarea) {
+  border-color: rgb(220 38 38 / 0.7); /* red-600 */
+}
+[data-invalid] :is(input, select, textarea):focus {
+  border-color: rgb(220 38 38);
+  --tw-ring-color: rgb(254 226 226); /* red-100 */
+}
+
+/* ── Depth: four calm layers ───────────────────────────────────────────────────────────
+   0 page canvas → 1 cards (border + a hairline shadow) → 2 bars, menus and toasts that float
+   over content → 3 dialogs above a dimmed page. Shadows are soft and short so nothing looks
+   heavy, and sticky bars keep a solid background so content scrolling under them stays calm. */
+:root {
+  --elev-1: 0 1px 2px rgb(27 31 36 / 0.04), 0 1px 1px rgb(27 31 36 / 0.02);
+  --elev-2: 0 4px 12px -2px rgb(27 31 36 / 0.10), 0 2px 4px -2px rgb(27 31 36 / 0.06);
+  --elev-2-up: 0 -4px 12px -6px rgb(27 31 36 / 0.10);
+  --elev-3: 0 24px 48px -12px rgb(27 31 36 / 0.28), 0 8px 16px -8px rgb(27 31 36 / 0.12);
+}
+.elev-1 { box-shadow: var(--elev-1); }
+.elev-2 { box-shadow: var(--elev-2); }
+.elev-2-up { box-shadow: var(--elev-2-up); }
+.elev-3 { box-shadow: var(--elev-3); }
+[data-tone="default"] { box-shadow: var(--elev-1); }
+[data-tone="quiet"] { box-shadow: none; }
+
+/* ── Hit areas (Fitts) ──────────────────────────────────────────────────────────────────
+   .hit-y   — a compact control (32 px) gets an invisible 44 px tall target; width is left
+              alone so neighbours in a row never overlap.
+   .hit-44  — a small target grows to at least 44 × 44 around its centre; use it only where
+              there's room (IconButton sets its own 44 px box instead). */
+.hit-y,
+.hit-44 {
+  position: relative;
+}
+.hit-y::after {
+  content: "";
+  position: absolute;
+  inset: calc((100% - max(100%, 44px)) / 2) 0;
+}
+.hit-44::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  translate: -50% -50%;
+}
+/* Touch screens: regular buttons and fields are 44 px tall. */
+@media (pointer: coarse) {
+  [data-size="md"],
+  input:not([type="checkbox"], [type="radio"], [type="range"]),
+  select {
+    min-height: 44px;
+  }
+}
+
+/* ── Waiting (Doherty) ─────────────────────────────────────────────────────────────────
+   A pressed button reacts at once (press pose + disabled + aria-busy). The spinner fades in
+   only if the request is still running after 120 ms, so fast answers don't flicker. */
+.spin-delayed {
+  animation: spin 1s linear infinite, motion-fade var(--dur-fade) linear 120ms both;
+}
+
+/* A waiting note ("Sending…") that only appears if the wait passes ~300 ms. */
+.delayed-fade {
+  animation: motion-fade var(--dur-fade) linear 300ms both;
+}
+
+/* ── Menus ─────────────────────────────────────────────────────────────────────────────── */
+@keyframes menu-in {
+  0% { opacity: 0; translate: 0 -4px; scale: 0.98; }
+  100% { opacity: 1; translate: 0 0; scale: 1; }
+}
+.menu-in {
+  transform-origin: top right;
+  animation: menu-in var(--dur-state) var(--ease-out) both;
+}
+
+/* ── Reduced motion: switch states instantly, or a short fade where something appears ──── */
 @media (prefers-reduced-motion: reduce) {
-  .details-chevron {
+  .details-chevron,
+  [data-tone] {
     transition: none;
   }
-  [data-anticipate][data-anticipate-play],
-  .anticipate-send,
-  [data-dragging] .drop-icon {
-    animation: none;
+  .spin-delayed {
+    animation: motion-fade var(--dur-fade) linear 120ms both;
   }
   .squish-surface,
   .squish-icon > svg,
   .drop-icon {
-    transition: background-color 150ms ease, border-color 150ms ease;
+    transition: background-color var(--dur-state) linear, border-color var(--dur-state) linear;
   }
   [data-pressed] > .squish-surface,
-  .squish-icon[data-pressed] > svg,
-  [data-dragging] .drop-icon {
+  [data-pressed][data-variant="primary"] > .squish-surface,
+  .squish-icon[data-pressed] > svg {
     transform: none;
   }
+  [data-dragging] .drop-icon {
+    translate: none;
+    scale: none;
+  }
+  [data-anticipate][data-anticipate-play],
+  .anticipate-send,
+  [data-dragging] .drop-icon,
   .squish-drop,
-  .squish-land,
-  .squish-pop {
+  .status-confirm::before,
+  [data-stage-cue] > .squish-surface,
+  [data-stage-cue][data-tone] {
     animation: none;
   }
+  /* Things that appear keep a short opacity-only fade so the change is still noticed. */
+  .squish-land,
+  .squish-pop,
+  .toast-in,
+  .dialog-in,
+  .menu-in,
+  .feedback-in {
+    animation: motion-fade var(--dur-fade) linear both;
+  }
+  .toast-out {
+    animation: motion-fade-out var(--dur-fade) linear both;
+  }
+}
+@keyframes motion-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes motion-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
