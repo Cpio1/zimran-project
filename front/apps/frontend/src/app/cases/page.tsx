@@ -10,7 +10,7 @@ import { api, listAll } from "@/api/client";
 import type { CaseStatus, CaseType } from "@/api/types";
 import { CASE_STATUSES, CASE_TYPES } from "@/api/types";
 import { USER_TURN } from "@/components/case/Sections";
-import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, ListSkeleton, Modal, PageHeader, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, ErrorBox, Field, FilterButtons, Input, ListSkeleton, Modal, PageHeader, Select, Textarea } from "@/components/ui";
 import { CASE_NEXT_STEP, CASE_STATUS_LABEL, CASE_TYPE_LABEL, CATEGORY_LABEL, formatDate } from "@/lib/format";
 import { invalidate, qk, useAllEntries } from "@/lib/hooks";
 import { useUrlState } from "@/lib/useUrlState";
@@ -34,14 +34,14 @@ function CasesInner() {
         // While the list is empty the empty state carries the one main "New case" button.
         actions={<Button variant={list.data?.length === 0 && !status ? "secondary" : "primary"} icon={<Plus className="size-4" aria-hidden />} onClick={() => setNewOpen(true)}>New case</Button>}
       />
-      <div role="tablist" aria-label="Stage" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-        {(["", ...CASE_STATUSES] as const).map((s) => (
-          <button key={s || "all"} role="tab" aria-selected={status === s} type="button" onClick={() => setStatus(s)}
-            className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", status === s ? "bg-inverse text-on-inverse" : "bg-surface text-muted ring-1 ring-line hover:text-ink")}>
-            {s ? CASE_STATUS_LABEL[s] : "All"}
-          </button>
-        ))}
-      </div>
+      {/* Jakob: a stage filter over one list — filter buttons (aria-pressed), not tabs. */}
+      <FilterButtons
+        label="Filter cases by stage"
+        value={status}
+        onChange={setStatus}
+        options={(["", ...CASE_STATUSES] as const).map((s) => ({ value: s, label: s ? CASE_STATUS_LABEL[s] : "All" }))}
+        className="-mx-4 mb-4 overflow-x-auto px-4 py-1.5 sm:mx-0 sm:flex-wrap sm:px-0"
+      />
       {list.error && <ErrorBox error={list.error} onRetry={() => list.refetch()} />}
       {list.isLoading && <ListSkeleton rows={3} />}
       {list.data?.length === 0 && (

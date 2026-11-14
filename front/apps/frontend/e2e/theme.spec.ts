@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 const theme = (page: Page) => page.evaluate(() => document.documentElement.dataset.theme);
 const bodyBg = (page: Page) => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-const DARK_BG = "rgb(15, 18, 17)";
-const LIGHT_BG = "rgb(246, 246, 243)";
+const DARK_BG = "rgb(13, 19, 17)";
+const LIGHT_BG = "rgb(244, 247, 245)";
 
 /** The theme toggle in the visible app chrome (sidebar on desktop, top bar on phones). */
 const toggle = (page: Page) => page.locator("button[aria-label^='Theme:']").filter({ visible: true }).first();

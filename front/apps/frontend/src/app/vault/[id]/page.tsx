@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, FilePlus2, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, ClipboardCheck, FilePlus2, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { api, listAll } from "@/api/client";
 import type { Entry } from "@/api/types";
 import { BenefitCard, useAskAboutEntry } from "@/components/Benefit";
 import { DocumentList, FactsList, StaleSourceNotice, entryNeedsReview, useEntryDocuments } from "@/components/Entry";
 import { useToast } from "@/components/Toast";
-import { Badge, Button, ButtonLink, Card, ErrorBox, Field, Input, ListSkeleton, Modal, NeedsReview, Notice, PageHeader, SectionTitle } from "@/components/ui";
+import { Badge, Button, ButtonLink, Card, ErrorBox, Field, Input, ListSkeleton, Menu, Modal, NeedsReview, Notice, PageHeader, SectionTitle, type MenuItem } from "@/components/ui";
 import { CASE_STATUS_LABEL, CATEGORY_LABEL, formatDate } from "@/lib/format";
 import { invalidate, qk } from "@/lib/hooks";
 
@@ -44,6 +44,24 @@ export default function EntryPage() {
   if (!entry.data) return <ListSkeleton rows={4} />;
   const e = entry.data;
   const loadedDocs = docs.map((q) => q.data).filter((d): d is NonNullable<typeof d> => !!d);
+  const needsReview = entryNeedsReview(e) || (benefits.data ?? []).some((b) => b.needs_review);
+  const hasDocs = e.document_ids.length > 0;
+  /**
+   * Staging + Hick: one main action chosen by the entry's state, one frequent secondary action,
+   * and everything rare (edit, delete, the remaining action) in "More" — the same place as a
+   * document's delete. Delete keeps its confirmation dialog.
+   *   details to check → "Review details"   · secondary "Ask about this"
+   *   no files yet      → "Add document"
+   *   otherwise         → "Ask about this"   · secondary "Add document"
+   */
+  const primary: "review" | "add" | "ask" = needsReview ? "review" : !hasDocs ? "add" : "ask";
+  const askBtn = (variant: "primary" | "secondary") => <Button variant={variant} icon={<MessageCircle className="size-4" aria-hidden />} loading={busy} onClick={() => ask(e.id, e.document_ids)}>Ask about this</Button>;
+  const addLink = (variant: "primary" | "secondary") => <ButtonLink href={`/upload?entry=${e.id}`} variant={variant} icon={<FilePlus2 className="size-4" aria-hidden />}>Add document</ButtonLink>;
+  const more: MenuItem[] = [
+    ...(primary === "review" ? [{ label: "Add document", icon: FilePlus2, onSelect: () => router.push(`/upload?entry=${e.id}`) }] : []),
+    { label: "Edit details", icon: Pencil, onSelect: () => setEditOpen(true) },
+    { label: "Delete entry", icon: Trash2, danger: true, onSelect: () => setDelOpen(true) },
+  ];
 
   return (
     <>
@@ -59,10 +77,20 @@ export default function EntryPage() {
         }
         actions={
           <>
-            <Button variant="primary" icon={<MessageCircle className="size-4" aria-hidden />} loading={busy} onClick={() => ask(e.id, e.document_ids)}>Ask about this</Button>
-            <ButtonLink href={`/upload?entry=${e.id}`} icon={<FilePlus2 className="size-4" aria-hidden />}>Add document</ButtonLink>
-            <Button icon={<Pencil className="size-4" aria-hidden />} onClick={() => setEditOpen(true)}>Edit</Button>
-            <Button variant="ghost" aria-label="Delete entry" onClick={() => setDelOpen(true)}><Trash2 className="size-4" aria-hidden /></Button>
+            {primary === "review" && (
+              <>
+                <ButtonLink href={`/review/${e.id}`} variant="primary" icon={<ClipboardCheck className="size-4" aria-hidden />}>Review details</ButtonLink>
+                {hasDocs && askBtn("secondary")}
+              </>
+            )}
+            {primary === "add" && addLink("primary")}
+            {primary === "ask" && (
+              <>
+                {askBtn("primary")}
+                {addLink("secondary")}
+              </>
+            )}
+            <Menu label="More actions for this entry" items={more} />
           </>
         }
       />
@@ -79,7 +107,7 @@ export default function EntryPage() {
         </section>
         <div className="grid gap-5 lg:grid-cols-2">
           <Card className="p-4">
-            <SectionTitle title="Key details" action={<Link href={`/review/${e.id}`} className="text-sm text-brand-700 hover:underline">Review</Link>} />
+            <SectionTitle title="Key details" action={<Link href={`/review/${e.id}`} className="hit-y inline-block text-sm text-brand-700 hover:underline">Review</Link>} />
             <FactsList entry={e} />
           </Card>
           <Card className="p-4">
@@ -87,7 +115,7 @@ export default function EntryPage() {
             <DocumentList entry={e} docs={docs} allowDelete />
           </Card>
           <Card className="p-4">
-            <SectionTitle title="Dates" action={<Link href="/calendar" className="text-sm text-brand-700 hover:underline">Calendar</Link>} />
+            <SectionTitle title="Dates" action={<Link href="/calendar" className="hit-y inline-block text-sm text-brand-700 hover:underline">Calendar</Link>} />
             {reminders.data?.length ? (
               <ul className="flex flex-col gap-2 text-sm">
                 {reminders.data.filter((r) => r.status !== "cancelled").map((r) => (

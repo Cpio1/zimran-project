@@ -18,8 +18,6 @@ export const useToast = () => useContext(Ctx);
 const VISIBLE_MS: Record<Toast["tone"], number> = { ok: 3500, warn: 7000, error: 7000 };
 /** Exit pose length (--dur-exit in globals.css); the next toast enters only after it. */
 const EXIT_MS = 160;
-/** Enter pose length (--dur-enter); the success check pops in after it. */
-const ENTER_MS = 240;
 const MAX_QUEUED = 4;
 
 /**
@@ -84,7 +82,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               head.tone === "ok" ? "bg-inverse text-on-inverse" : head.tone === "warn" ? "bg-warn-solid text-white" : "bg-danger-solid text-white",
             )}
           >
-            {head.tone === "ok" ? <SuccessIcon icon={Check} afterMs={ENTER_MS} className="size-4 text-brand-200" /> : <AlertTriangle className="size-4 shrink-0" aria-hidden />}
+            {head.tone === "ok" ? <SuccessIcon icon={Check} className="size-4 text-brand-200" /> : <AlertTriangle className="size-4 shrink-0" aria-hidden />}
             <span className="min-w-0 flex-1 break-words py-1.5">{head.text}</span>
             {queue.length > 1 && <span className="shrink-0 text-xs opacity-70">+{queue.length - 1}</span>}
             <IconButton icon={X} label="Dismiss" tone="inherit" className="opacity-80 hover:opacity-100" onClick={() => setLeaving(true)} />

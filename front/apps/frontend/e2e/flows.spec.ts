@@ -118,7 +118,7 @@ test("upload → review → certificate 4/1/3 → chat → matching → case →
 
   // Calendar shows the document date to confirm
   await page.goto("/calendar");
-  await page.getByRole("tab", { name: "Next 30 days" }).click();
+  await page.getByRole("button", { name: "Next 30 days" }).click();
   await expect(page.getByText(/Nothing between|Four dental cleaning services/).first()).toBeVisible();
 });
 
@@ -156,11 +156,13 @@ test("errors: 503 AI not configured, 401 expired session without login, 409 conf
   await page.goto(url);
   const other = await context.newPage();
   await other.goto(url);
-  await other.getByRole("button", { name: "Edit" }).click();
+  await other.getByRole("button", { name: "More actions for this entry" }).click();
+  await other.getByRole("menuitem", { name: "Edit details" }).click();
   await other.getByLabel("Name").fill("Changed elsewhere");
   await other.getByRole("button", { name: "Save" }).click();
   await expect(other.getByRole("heading", { name: "Changed elsewhere" })).toBeVisible();
-  await page.getByRole("button", { name: "Edit" }).click();
+  await page.getByRole("button", { name: "More actions for this entry" }).click();
+  await page.getByRole("menuitem", { name: "Edit details" }).click();
   await page.getByLabel("Name").fill("My change");
   await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
   await expect(page.getByText(/changed elsewhere. Reload the latest version/)).toBeVisible();

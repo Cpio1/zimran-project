@@ -26,12 +26,13 @@ export function OffsetPicker({ value, onChange, legend = "Remind me" }: { value:
   return (
     <fieldset>
       <legend className="mb-1.5 text-sm font-medium">{legend}</legend>
-      <div className="flex flex-wrap gap-1.5">
+      {/* 32 px chips with 44 px targets (.hit-y); 12 px between wrapped lines so targets don't overlap. */}
+      <div className="flex flex-wrap gap-x-1.5 gap-y-3 [@media(pointer:coarse)]:gap-x-2">
         {REMINDER_OFFSETS.map((o) => {
           const on = value.includes(o);
           return (
             <button key={o} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== o) : [...value, o].sort((a, b) => b - a))}
-              className={clsx("rounded-full px-3 py-1.5 text-xs font-medium", on ? "bg-accent text-on-accent" : "bg-subtle-strong text-muted hover:text-ink")}>
+              className={clsx("hit-y h-8 min-w-11 rounded-full px-3 text-xs font-medium transition-colors [@media(pointer:coarse)]:h-11", on ? "bg-accent text-on-accent" : "bg-subtle-strong text-muted hover:text-ink")}>
               {offsetLabel(o)}
             </button>
           );

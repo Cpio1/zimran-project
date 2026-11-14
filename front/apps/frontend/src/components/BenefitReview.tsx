@@ -43,7 +43,7 @@ export function DeadlineControls({ b }: { b: Benefit }) {
         <Badge tone={b.deadline_status === "needs_review" ? "warn" : b.deadline_status === "not_known" ? "neutral" : "brand"}>{DEADLINE_STATUS_LABEL[b.deadline_status]}</Badge>
       </div>
       {rule && <p className="text-xs text-muted">Document says: {rule}{b.deadline_rule?.last_day_inclusion === "unknown" ? " · unclear whether the last day counts" : ""}</p>}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-x-2 gap-y-3">
         {b.deadline_status === "needs_review" && b.deadline_rule?.date && (
           <Button size="sm" icon={<CalendarCheck className="size-3.5" aria-hidden />} loading={m.isPending} onClick={() => m.mutate({ deadline_date: b.deadline_rule!.date, deadline_origin: "document" })}>
             Use printed date
@@ -52,7 +52,7 @@ export function DeadlineControls({ b }: { b: Benefit }) {
         {!editing ? (
           <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>{b.deadline_date ? "Change date" : "Set a date"}</Button>
         ) : (
-          <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (date) m.mutate({ deadline_date: date, deadline_origin: "user" }, { onSuccess: () => setEditing(false) }); }}>
+          <form className="flex flex-wrap gap-x-2 gap-y-3" onSubmit={(e) => { e.preventDefault(); if (date) m.mutate({ deadline_date: date, deadline_origin: "user" }, { onSuccess: () => setEditing(false) }); }}>
             <Input type="date" aria-label="Your date" value={date} onChange={(e) => setDate(e.target.value)} className="w-44" />
             <Button size="sm" type="submit" variant="primary" disabled={!date} loading={m.isPending}>Save</Button>
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>

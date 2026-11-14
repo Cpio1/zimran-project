@@ -22,8 +22,11 @@ const variants: Record<Variant, { root: string; surface: string }> = {
   /** A destructive action that must not compete with a dialog's main action. */
   subtleDanger: { root: "text-red-700 disabled:text-red-700/50", surface: "inset-0 group-hover:bg-red-50" },
 };
-/** sm is 32 px tall but gets a 44 px target (.hit-y); md becomes 44 px on touch screens. */
-const sizes = { sm: "hit-y h-8 px-3 text-sm", md: "h-10 px-4 text-sm", lg: "h-12 px-5 text-base" };
+/**
+ * md is 44 px (the default target size, matching fields); sm is 32 px with a 44 px target
+ * (.hit-y) — rows that wrap sm controls keep ≥ 12 px between lines so targets never overlap.
+ */
+const sizes = { sm: "hit-y h-8 px-3 text-sm", md: "h-11 px-4 text-sm", lg: "h-12 px-5 text-base" };
 const buttonBase = "group relative isolate inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium";
 const Surface = ({ variant }: { variant: Variant }) => (
   <span aria-hidden className={clsx("squish-surface pointer-events-none absolute -z-10 rounded-[inherit]", variants[variant].surface)} />
@@ -216,10 +219,10 @@ export function parsedField<T>(raw: string, parsed: Parsed<T>, onPick: (display:
     return {
       error: null,
       hint: (
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-amber-800">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-3 text-amber-800">
           <span>{parsed.message}</span>
           {parsed.options.map((o) => (
-            <button key={o.display} type="button" onClick={() => onPick(o.display)} className="hit-y rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 font-medium hover:bg-amber-100">
+            <button key={o.display} type="button" onClick={() => onPick(o.display)} className="hit-y inline-flex h-8 items-center rounded-full border border-amber-300 bg-amber-50 px-3 font-medium hover:bg-amber-100">
               {o.display}
             </button>
           ))}
@@ -238,7 +241,9 @@ export function parsedField<T>(raw: string, parsed: Parsed<T>, onPick: (display:
  */
 export function FilterButtons<T extends string>({ label, options, value, onChange, look = "pills", className }: { label: string; options: { value: T; label: ReactNode; count?: number }[]; value: T; onChange: (v: T) => void; look?: "pills" | "segmented"; className?: string }) {
   return (
-    <div role="group" aria-label={label} className={clsx(look === "pills" ? "flex gap-1.5" : "flex gap-1 rounded-lg bg-subtle-strong p-1", className)}>
+    // Pills: a scrolling row clips anything outside it, so callers give it 6 px vertical padding
+    // (the 44 px targets fit inside) and wrapped lines keep 12 px apart.
+    <div role="group" aria-label={label} className={clsx(look === "pills" ? "flex gap-x-1.5 gap-y-3" : "flex gap-1 rounded-lg bg-subtle-strong p-1", className)}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -248,8 +253,8 @@ export function FilterButtons<T extends string>({ label, options, value, onChang
             aria-pressed={on}
             onClick={() => onChange(o.value)}
             className={clsx(
-              "shrink-0 text-sm transition-colors [@media(pointer:coarse)]:min-h-11",
-              look === "pills" ? "hit-y rounded-full px-3 py-1.5" : "rounded-md px-3 py-1.5",
+              "min-w-11 shrink-0 text-sm transition-colors [@media(pointer:coarse)]:min-h-11",
+              look === "pills" ? "hit-y rounded-full px-3 py-1.5" : "hit-y rounded-md px-3 py-1.5",
               look === "pills" && (on ? "bg-inverse text-on-inverse" : "bg-surface text-muted ring-1 ring-line hover:text-ink"),
               look === "segmented" && (on ? "elev-1 bg-surface font-medium text-ink" : "text-muted hover:text-ink"),
             )}
@@ -295,7 +300,7 @@ export function Tabs<T extends string>({ id, label, tabs, value, onChange }: { i
               e.preventDefault();
               move(k);
             }}
-            className={clsx("rounded-md px-3 py-1.5 text-sm transition-colors [@media(pointer:coarse)]:min-h-11", on ? "elev-1 bg-surface font-medium text-ink" : "text-muted hover:text-ink")}
+            className={clsx("hit-y min-w-11 rounded-md px-3 py-1.5 text-sm transition-colors [@media(pointer:coarse)]:min-h-11", on ? "elev-1 bg-surface font-medium text-ink" : "text-muted hover:text-ink")}
           >
             {t.label}
           </button>
@@ -312,7 +317,7 @@ export const tabPanelProps = (id: string, value: string) => ({ role: "tabpanel",
  */
 const cardTones = {
   default: "border-line bg-surface",
-  quiet: "border-line/70 bg-surface/60",
+  quiet: "border-line/70 bg-surface-quiet",
   focus: "stage-focus border-brand-200 bg-surface",
 };
 export type CardTone = keyof typeof cardTones;
@@ -368,7 +373,7 @@ export function Field({ label, hint, error, children, htmlFor, hideLabel }: { la
 }
 const inputCls = "w-full min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm placeholder:text-placeholder focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:bg-subtle";
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...p }, ref) {
-  return <input ref={ref} className={clsx(inputCls, "h-10", className)} {...p} />;
+  return <input ref={ref} className={clsx(inputCls, "h-11", className)} {...p} />;
 });
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea({ className, ...p }, ref) {
   return <textarea ref={ref} className={clsx(inputCls, className)} {...p} />;
@@ -376,10 +381,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 /**
  * Native <select> (keeps its semantics, keyboard and the OS picker). The native look is dropped
  * (`.select-native`) because WebKit ignores height/min-height on it; the chevron is drawn in CSS.
- * 40 px with a mouse, 44 px on touch screens.
+ * 44 px, like text fields.
  */
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select({ className, ...p }, ref) {
-  return <select ref={ref} className={clsx(inputCls, "select-native h-10 pr-9", className)} {...p} />;
+  return <select ref={ref} className={clsx(inputCls, "select-native h-11 pr-9", className)} {...p} />;
 });
 
 export function Spinner({ label = "Loading" }: { label?: string }) {

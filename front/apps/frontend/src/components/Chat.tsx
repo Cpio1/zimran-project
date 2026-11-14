@@ -109,7 +109,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
           <div className="flex flex-col gap-3 py-4">
             <p className="flex items-center gap-2 text-sm text-muted"><Sparkles className="size-4 text-brand-600" aria-hidden /> Ask about your documents, or describe something you need.</p>
             {thread.scope === "vault" && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-x-2 gap-y-3">
                 {SUGGESTIONS.map((s) => (
                   <button key={s.text} type="button" onClick={() => submit(s.text, s.purpose)} className="hit-y rounded-full border border-line bg-surface px-3 py-2 text-left text-sm hover:border-brand-200 hover:bg-brand-50">
                     {s.text}
@@ -141,7 +141,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
           submit();
         }}
       >
-        <div role="radiogroup" aria-label="Question type" className="flex flex-wrap gap-1.5">
+        <div role="radiogroup" aria-label="Question type" className="flex flex-wrap gap-x-1.5 gap-y-3">
           {([
             ["answer", "Ask a question"],
             ["match_need", "Find a benefit for a need"],
@@ -152,7 +152,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
               role="radio"
               aria-checked={purpose === v}
               onClick={() => setPurpose(v)}
-              className={clsx("hit-y rounded-full px-3 py-1.5 text-xs font-medium transition-colors", purpose === v ? "bg-accent text-on-accent" : "bg-subtle-strong text-muted hover:text-ink")}
+              className={clsx("hit-y inline-flex h-8 items-center rounded-full px-3 text-xs font-medium transition-colors", purpose === v ? "bg-accent text-on-accent" : "bg-subtle-strong text-muted hover:text-ink")}
             >
               {label}
             </button>
@@ -262,7 +262,7 @@ function AssistantMessage({ m, thread, onAsk }: { m: ChatMessage; thread: Thread
           </div>
         )}
         {actions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-3">
             {actions.map((a, i) =>
               a.href ? (
                 <Link key={i} href={a.href} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-subtle">{a.icon}{a.label}</Link>

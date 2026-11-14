@@ -107,7 +107,7 @@ function DashboardBody({ d }: { d: Dashboard }) {
         </Card>
 
         <section aria-labelledby="h-benefits">
-          <SectionTitle id="h-benefits" title="Benefits to use" action={<Link href="/benefits" className="text-sm text-brand-700 hover:underline">View all</Link>} />
+          <SectionTitle id="h-benefits" title="Benefits to use" action={<Link href="/benefits" className="hit-y inline-block text-sm text-brand-700 hover:underline">View all</Link>} />
           {d.next_benefits.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
               {d.next_benefits.slice(0, 4).map((b) => <BenefitCard key={b.id} b={b} compact />)}
@@ -138,7 +138,7 @@ function DashboardBody({ d }: { d: Dashboard }) {
         </Card>
 
         <Card tone="quiet" className="p-4">
-          <SectionTitle title="Coming up" action={<Link href="/calendar" className="text-sm text-brand-700 hover:underline">Calendar</Link>} />
+          <SectionTitle title="Coming up" action={<Link href="/calendar" className="hit-y inline-block text-sm text-brand-700 hover:underline">Calendar</Link>} />
           {d.upcoming_reminders.length ? (
             <ul className="flex flex-col gap-2.5">
               {d.upcoming_reminders.slice(0, 5).map((r) => (
@@ -157,7 +157,7 @@ function DashboardBody({ d }: { d: Dashboard }) {
         </Card>
 
         <Card tone="quiet" className="p-4">
-          <SectionTitle title="Active cases" action={<Link href="/cases" className="text-sm text-brand-700 hover:underline">View all</Link>} />
+          <SectionTitle title="Active cases" action={<Link href="/cases" className="hit-y inline-block text-sm text-brand-700 hover:underline">View all</Link>} />
           {d.active_cases.length ? (
             <ul className="flex flex-col gap-3">
               {d.active_cases.slice(0, 4).map((c) => (

@@ -10,8 +10,10 @@
   --color-brand-600: #17705f;
   --color-brand-700: #125a4c;
 
-  --color-canvas: #f6f6f3;          /* page background */
+  --color-canvas: #f4f7f5;          /* page background: light grey-mint */
   --color-surface: #ffffff;         /* cards, fields, dialogs, menus */
+  --color-surface-quiet: #fafcfb;   /* supporting cards: opaque, a touch quieter than surface */
+  --color-sidebar: #f8faf9;         /* navigation: restrained, below cards in the hierarchy */
   --color-subtle: #fafaf9;          /* quiet fills inside a surface */
   --color-subtle-strong: #f2f2f0;   /* hover, chips, segmented controls */
   --color-track: #e7e5e4;           /* skeletons, progress tracks */
@@ -37,12 +39,19 @@
 :root {
   color-scheme: light;
   --backdrop: rgb(15 20 25 / 0.45);
+  /* Decorative page background (AppShell's .app-backdrop). */
+  --bg-glow-a: rgb(52 181 151 / 0.16);   /* mint, top right */
+  --bg-glow-b: rgb(96 150 210 / 0.12);   /* soft blue, bottom left */
+  --bg-dot: rgb(27 31 36 / 0.07);        /* dot texture */
+  --bg-dot-step: 30px;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   /* Deep neutral page, slightly lighter surfaces (lighter = higher), soft borders. */
-  --color-canvas: #0f1211;
-  --color-surface: #171b1a;
+  --color-canvas: #0d1311;
+  --color-surface: #171d1b;
+  --color-surface-quiet: #141a18;
+  --color-sidebar: #111715;
   --color-subtle: #1c2120;
   --color-subtle-strong: #242a28;
   --color-track: #2d3431;
@@ -86,13 +95,18 @@
   --elev-2-up: 0 -6px 16px -8px rgb(0 0 0 / 0.6);
   --elev-3: 0 28px 60px -12px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.04);
   --backdrop: rgb(0 0 0 / 0.62);
+  --bg-glow-a: rgb(46 166 140 / 0.10);
+  --bg-glow-b: rgb(70 120 170 / 0.08);
+  --bg-dot: rgb(255 255 255 / 0.04);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
   color-scheme: dark;
   /* Deep neutral page, slightly lighter surfaces (lighter = higher), soft borders. */
-  --color-canvas: #0f1211;
-  --color-surface: #171b1a;
+  --color-canvas: #0d1311;
+  --color-surface: #171d1b;
+  --color-surface-quiet: #141a18;
+  --color-sidebar: #111715;
   --color-subtle: #1c2120;
   --color-subtle-strong: #242a28;
   --color-track: #2d3431;
@@ -136,8 +150,44 @@
   --elev-2-up: 0 -6px 16px -8px rgb(0 0 0 / 0.6);
   --elev-3: 0 28px 60px -12px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.04);
   --backdrop: rgb(0 0 0 / 0.62);
+  --bg-glow-a: rgb(46 166 140 / 0.10);
+  --bg-glow-b: rgb(70 120 170 / 0.08);
+  --bg-dot: rgb(255 255 255 / 0.04);
   }
 }
+/* ── Page backdrop ─────────────────────────────────────────────────────────────────────────
+   One static layer behind everything (AppShell renders it with aria-hidden): two large, soft
+   radial glows at the edges of the work area and a very faint dot grid. The dots are masked out
+   in the middle column, so they read mostly in free space; cards and forms are opaque and sit
+   on top with soft borders and small shadows. Nothing here animates or takes pointer events. */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 55% at 100% 0%, var(--bg-glow-a), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 0% 100%, var(--bg-glow-b), transparent 70%);
+}
+.app-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at center, var(--bg-dot) 1px, transparent 1.5px);
+  background-size: var(--bg-dot-step) var(--bg-dot-step);
+  -webkit-mask-image: radial-gradient(ellipse 55% 60% at 55% 45%, transparent 35%, #000 90%);
+  mask-image: radial-gradient(ellipse 55% 60% at 55% 45%, transparent 35%, #000 90%);
+}
+/* Phones: the content fills the width, so the decoration steps further back. */
+@media (max-width: 767px) {
+  .app-backdrop {
+    opacity: 0.6;
+  }
+  .app-backdrop::before {
+    opacity: 0.6;
+  }
+}
+
 /* Switching themes recolours everything at once instead of letting each transition run. */
 :root.theme-switching *,
 :root.theme-switching *::before,
@@ -188,11 +238,17 @@ dialog::backdrop {
    Every effect is a few key poses with a duration and an easing; the browser computes the
    frames in between (pose to pose).
      - transition  → an effect with two states (pressed ↔ rest, quiet ↔ focus);
-     - @keyframes  → a sequence: wind-up (anticipation) → main move → follow-through → settle.
+     - @keyframes  → a sequence: wind-up (anticipation) → main move → overshoot → settle.
+
+   Terms used below:
+     overshoot/settle — one element goes slightly past its target and comes back;
+     follow-through   — a *child* part keeps moving after its parent has stopped (the check in a
+                        toast, the glyph in the upload drop zone). Containers stop first.
 
    Rules shared by every effect:
-     Snappy timing   — a whole sequence, wind-up and follow-through included, is ≤ 300 ms.
-                        Handlers, navigation and requests never wait for it.
+     Snappy timing   — a whole sequence — wind-up, delays, child effects and follow-through
+                        included — ends within 300 ms of its trigger. Phases overlap instead of
+                        queuing. Handlers, navigation and requests never wait for any of it.
      Slow in/out     — ease-out to appear, ease-in to leave, ease-in-out to move between states;
                         inside a keyframe sequence each segment sets its own curve.
      Arcs            — small icons travel along short curves (several keyframes on `translate`);
@@ -207,14 +263,15 @@ dialog::backdrop {
 :root {
   /* Durations — keep in sync with the constants in motion.tsx and Toast.tsx */
   --dur-press: 80ms;         /* rest → pressed (button press 80–140 ms) */
-  --dur-release: 140ms;      /* pressed → rebound → rest (follow-through) */
+  --dur-release: 140ms;      /* pressed → overshoot → settle */
   --dur-state: 180ms;        /* card / disclosure state change (140–220 ms) */
-  --dur-enter: 240ms;        /* dialog / toast appear (180–280 ms) */
+  --dur-enter: 240ms;        /* dialog appear (180–280 ms) */
+  --dur-enter-toast: 180ms;  /* toast container; its check follows through until 240 ms */
   --dur-exit: 160ms;         /* toast leave */
   --dur-nudge: 260ms;        /* anticipation nudge of a directional icon */
   --dur-arc: 280ms;          /* an icon travelling along an arc and landing */
-  --dur-confirm: 280ms;      /* confirmation: status icon pop + contrast flash */
-  --dur-cue: 280ms;          /* staging cue (CUE_MS in motion.tsx) */
+  --dur-confirm: 240ms;      /* confirmation: status icon pop + contrast flash */
+  --dur-cue: 180ms;          /* staging cue (CUE_MS in motion.tsx) */
   --dur-fade: 120ms;         /* reduced-motion replacement */
 
   /* Amplitudes */
@@ -233,11 +290,6 @@ dialog::backdrop {
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --ease-anticipate: cubic-bezier(0.45, -0.4, 0.3, 1.25);
 
-  /* Back-compat aliases */
-  --motion-press: var(--dur-press);
-  --motion-release: var(--dur-release);
-  --motion-pop: var(--dur-confirm);
-  --motion-anticipate: var(--dur-nudge);
 }
 @supports (transition-timing-function: linear(0, 1)) {
   :root {
@@ -249,8 +301,9 @@ dialog::backdrop {
 }
 
 /* ── Button: rest → light squash on press → springy rebound → rest ──────────────────────
-   Two states, so a transition: press = 80 ms ease-out; release = 140 ms spring, whose overshoot
-   is the follow-through. A press that lands mid-release retargets from the in-flight value, so
+   Two states, so a transition: press = 80 ms ease-out; release = 140 ms spring, whose curve gives
+   the overshoot/settle. No follow-through: the button has no child that should trail it, and
+   the label must stay still. A press that lands mid-release retargets from the in-flight value, so
    rapid taps never jump. The label never transforms, only the background layer does. */
 .squish-surface {
   transform-origin: 50% 50%;
@@ -308,7 +361,7 @@ dialog::backdrop {
 @keyframes squish-drop {
   0% { scale: 1; animation-timing-function: var(--ease-out); }
   35% { scale: 1.12 0.88; animation-timing-function: var(--ease-in-out); }  /* land: squash */
-  70% { scale: 0.97 1.03; animation-timing-function: var(--ease-out); }     /* follow-through */
+  70% { scale: 0.97 1.03; animation-timing-function: var(--ease-out); }     /* overshoot → settle */
   100% { scale: 1; }                                                         /* settle */
 }
 .squish-drop {
@@ -323,7 +376,7 @@ dialog::backdrop {
   0% { opacity: 0; translate: -6px -2px; scale: 0.96 1.04; animation-timing-function: var(--ease-out); }
   25% { opacity: 0.7; translate: -4px -7px; scale: 1; animation-timing-function: var(--ease-in-out); }  /* top of the arc */
   62% { opacity: 1; translate: 0 0; scale: 1.08 0.92; animation-timing-function: var(--ease-out); }      /* land */
-  84% { scale: 0.98 1.02; }                                                                             /* follow-through */
+  84% { scale: 0.98 1.02; }                                                                             /* overshoot → settle */
   100% { opacity: 1; translate: 0 0; scale: 1; }
 }
 .squish-land {
@@ -337,7 +390,7 @@ dialog::backdrop {
   0% { translate: 0 0; scale: 1; animation-timing-function: var(--ease-out); }
   25% { translate: -1px 2px; scale: 1.05 0.94; animation-timing-function: var(--ease-in-out); }  /* wind-up */
   55% { translate: 1.5px -4px; scale: 0.95 1.06; animation-timing-function: var(--ease-in-out); } /* arc up */
-  80% { translate: 0.5px -1px; scale: 1; animation-timing-function: var(--ease-out); }           /* follow-through */
+  80% { translate: 0.5px -1px; scale: 1; animation-timing-function: var(--ease-out); }           /* overshoot → settle */
   100% { translate: 0 0; scale: 1; }
 }
 .anticipate-send {
@@ -350,12 +403,13 @@ dialog::backdrop {
 @keyframes squish-pop {
   0% { opacity: 0; scale: 0.85; animation-timing-function: var(--ease-out); }
   55% { opacity: 1; scale: var(--amp-confirm); animation-timing-function: var(--ease-in-out); }  /* peak */
-  80% { scale: 0.99; animation-timing-function: var(--ease-out); }                               /* follow-through */
+  80% { scale: 0.99; animation-timing-function: var(--ease-out); }                               /* overshoot → settle */
   100% { opacity: 1; scale: 1; }
 }
 .squish-pop {
   transform-origin: 50% 50%;
-  animation: squish-pop var(--dur-confirm) both;
+  /* A context can shift the pop to overlap its own entrance (see .toast-in). */
+  animation: squish-pop var(--confirm-dur, var(--dur-confirm)) var(--confirm-delay, 0ms) both;
 }
 @keyframes confirm-flash {
   0% { opacity: 0; scale: 0.6; animation-timing-function: var(--ease-out); }
@@ -375,8 +429,7 @@ dialog::backdrop {
   background: currentColor;
   opacity: 0;
   pointer-events: none;
-  animation: confirm-flash var(--dur-confirm) both;
-  animation-delay: inherit;
+  animation: confirm-flash var(--confirm-dur, var(--dur-confirm)) var(--confirm-delay, 0ms) both;
 }
 
 /* ── Toast and dialog: appear (offset, transparent) → steady → leave ─────────────────────
@@ -389,9 +442,16 @@ dialog::backdrop {
   0% { opacity: 1; translate: 0 0; }
   100% { opacity: 0; translate: 0 4px; }
 }
-.toast-in,
 .dialog-in {
   animation: motion-enter var(--dur-enter) var(--ease-out) both;
+}
+/* Toast: the container stops at 180 ms; its check starts at 80 ms (overlapping the entrance)
+   and follows through until 240 ms — the whole confirmation is over within 300 ms even when the
+   browser starts the animations a frame or two late (measured 270–280 ms end to end). */
+.toast-in {
+  animation: motion-enter var(--dur-enter-toast) var(--ease-out) both;
+  --confirm-delay: 80ms;
+  --confirm-dur: 160ms;
 }
 .toast-out {
   animation: motion-exit var(--dur-exit) var(--ease-in) both;
@@ -454,10 +514,9 @@ summary.details-summary::-webkit-details-marker {
 
 /* ── Staging ───────────────────────────────────────────────────────────────────────────
    Card tone changes (quiet ↔ default ↔ focus) are a 180 ms ease-in-out transition. The focus
-   accent is static, so the hierarchy holds with reduced motion too. An element that *becomes*
-   the next action plays one 280 ms cue (data-stage-cue), at most one at a time:
-     button: wind-up → slightly past full size → settle, with a fading halo;
-     card:   only the halo (big blocks don't scale). */
+   accent is static, so the hierarchy holds with reduced motion too. The button that *becomes*
+   the next action plays one 180 ms cue (data-stage-cue), at most one at a time: wind-up →
+   slightly past full size → settle, with a fading halo. Cards never cue — their button does. */
 [data-tone] {
   transition:
     border-color var(--dur-state) var(--ease-in-out),
@@ -483,8 +542,18 @@ summary.details-summary::-webkit-details-marker {
     stage-cue var(--dur-cue) both,
     stage-halo var(--dur-cue) var(--ease-out);
 }
-[data-stage-cue][data-tone] {
-  animation: stage-halo var(--dur-cue) var(--ease-out);
+
+/* ── Native select without the native look (WebKit then honours height and padding) ────── */
+.select-native {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235d6570' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+:root[data-theme="dark"] .select-native {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23a5ada9' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
 }
 
 /* ── Errors: text + border + icon ───────────────────────────────────────────────────────── */
@@ -536,9 +605,8 @@ summary.details-summary::-webkit-details-marker {
   height: max(100%, 44px);
   translate: -50% -50%;
 }
-/* Touch screens: regular buttons and fields are 44 px tall. */
+/* Touch screens: any field without the shared classes still gets 44 px. */
 @media (pointer: coarse) {
-  [data-size="md"],
   input:not([type="checkbox"], [type="radio"], [type="range"]),
   select {
     min-height: 44px;
@@ -595,8 +663,7 @@ summary.details-summary::-webkit-details-marker {
   [data-dragging] .drop-icon,
   .squish-drop,
   .status-confirm::before,
-  [data-stage-cue] > .squish-surface,
-  [data-stage-cue][data-tone] {
+  [data-stage-cue] > .squish-surface {
     animation: none;
   }
   /* Things that appear keep a short opacity-only fade so the change is still noticed. */

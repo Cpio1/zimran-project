@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import clsx from "clsx";
 import { Bell, CalendarDays } from "lucide-react";
 import { api, listAll } from "@/api/client";
 import type { Reminder } from "@/api/types";
 import { ReminderModal, offsetLabel } from "@/components/Reminders";
-import { Badge, Card, EmptyState, ErrorBox, ListSkeleton, PageHeader, Select } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, ErrorBox, FilterButtons, ListSkeleton, PageHeader, Select, Tabs, tabPanelProps } from "@/components/ui";
 import { addDaysISO, formatDate, formatDateTime, todayISO } from "@/lib/format";
 import { qk, useAllEntries, useProfile } from "@/lib/hooks";
 
@@ -41,20 +40,14 @@ export default function CalendarPage() {
 
   return (
     <>
-      <PageHeader title="Calendar" subtitle={`Dates from your documents and your reminders · ${profile.data?.timezone ?? ""}`} actions={<Link href="/settings" className="text-sm text-brand-700 hover:underline">Notification settings</Link>} />
+      <PageHeader title="Calendar" subtitle={`Dates from your documents and your reminders · ${profile.data?.timezone ?? ""}`} actions={<Link href="/settings" className="hit-y inline-block text-sm text-brand-700 hover:underline">Notification settings</Link>} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div role="tablist" aria-label="View" className="flex gap-1 rounded-lg bg-subtle-strong p-1">
-          {(["agenda", "notifications"] as const).map((t) => (
-            <button key={t} role="tab" aria-selected={tab === t} type="button" onClick={() => setTab(t)} className={clsx("rounded-md px-3 py-1.5 text-sm", tab === t ? "bg-surface font-medium shadow-sm" : "text-muted")}>{t === "agenda" ? "Agenda" : "Notifications"}</button>
-          ))}
-        </div>
+        {/* Real tabs: they swap the panel below (tab/tabpanel, roving tabindex, ←/→/Home/End). */}
+        <Tabs id="cal" label="View" value={tab} onChange={setTab} tabs={[{ value: "agenda", label: "Agenda" }, { value: "notifications", label: "Notifications" }]} />
         {tab === "agenda" && (
           <>
-            <div role="tablist" aria-label="Range" className="flex gap-1 rounded-lg bg-subtle-strong p-1">
-              {(["week", "month"] as const).map((r) => (
-                <button key={r} role="tab" aria-selected={range === r} type="button" onClick={() => setRange(r)} className={clsx("rounded-md px-3 py-1.5 text-sm", range === r ? "bg-surface font-medium shadow-sm" : "text-muted")}>{r === "week" ? "This week" : "Next 30 days"}</button>
-              ))}
-            </div>
+            {/* The range only narrows the agenda: a filter, not tabs. */}
+            <FilterButtons look="segmented" label="Range" value={range} onChange={setRange} options={[{ value: "week", label: "This week" }, { value: "month", label: "Next 30 days" }]} />
             <Select aria-label="Filter by entry" value={entryFilter} onChange={(e) => setEntryFilter(e.target.value)} className="sm:ml-auto sm:w-56">
               <option value="">All entries</option>
               {entries.data?.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}
@@ -64,7 +57,7 @@ export default function CalendarPage() {
       </div>
 
       {tab === "agenda" ? (
-        <>
+        <div {...tabPanelProps("cal", "agenda")} className="focus-visible:outline-offset-4">
           {reminders.error && <ErrorBox error={reminders.error} onRetry={() => reminders.refetch()} />}
           {reminders.isLoading && <ListSkeleton rows={3} />}
           {reminders.data && !groups.length && <EmptyState icon={<CalendarDays className="size-8" aria-hidden />} title={`Nothing between ${formatDate(from)} and ${formatDate(to)}`} body="Dates appear here when documents mention them or when you add a reminder to a benefit or case." />}
@@ -79,13 +72,13 @@ export default function CalendarPage() {
                         <p className="font-medium">{r.title}</p>
                         <p className="text-xs text-muted">{r.local_time} {r.timezone.replace(/_/g, " ")} · {r.offset_days.map(offsetLabel).join(", ") || "no alerts"}</p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
                         {r.status === "needs_review" && <Badge tone="warn">Date to confirm</Badge>}
                         {r.status === "done" && <Badge>Done</Badge>}
                         <Badge>{r.origin === "document" ? "From document" : r.origin === "user" ? "Yours" : "Suggested"}</Badge>
-                        {r.benefit_id && <Link href={`/benefits/${r.benefit_id}`} className="text-sm text-brand-700 hover:underline">Benefit</Link>}
-                        {r.case_id && <Link href={`/cases/${r.case_id}`} className="text-sm text-brand-700 hover:underline">Case</Link>}
-                        <button type="button" onClick={() => setEdit(r)} className="rounded-md px-2 py-1 text-sm hover:bg-subtle-strong">Edit</button>
+                        {r.benefit_id && <Link href={`/benefits/${r.benefit_id}`} className="hit-y inline-flex h-8 items-center text-sm text-brand-700 hover:underline">Benefit</Link>}
+                        {r.case_id && <Link href={`/cases/${r.case_id}`} className="hit-y inline-flex h-8 items-center text-sm text-brand-700 hover:underline">Case</Link>}
+                        <Button size="sm" variant="ghost" onClick={() => setEdit(r)}>Edit</Button>
                       </div>
                     </Card>
                   ))}
@@ -93,9 +86,9 @@ export default function CalendarPage() {
               </section>
             ))}
           </div>
-        </>
+        </div>
       ) : (
-        <>
+        <div {...tabPanelProps("cal", "notifications")} className="focus-visible:outline-offset-4">
           {notifications.error && <ErrorBox error={notifications.error} onRetry={() => notifications.refetch()} />}
           {notifications.isLoading && <ListSkeleton rows={2} />}
           {notifications.data?.length === 0 && <EmptyState icon={<Bell className="size-8" aria-hidden />} title="No notifications" />}
@@ -111,7 +104,7 @@ export default function CalendarPage() {
               </Card>
             ))}
           </ul>
-        </>
+        </div>
       )}
       {edit && <ReminderModal open onClose={() => setEdit(null)} reminder={edit} />}
     </>

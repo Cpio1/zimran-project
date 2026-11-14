@@ -28,10 +28,12 @@ function VaultInner() {
   });
   const items = list.data?.pages.flatMap((p) => p.data) ?? [];
   const filtered = !!dq || !!category;
+  // Staging: while the vault is empty, the empty state's button is the one main action.
+  const emptyVault = !!list.data && items.length === 0 && !filtered;
 
   return (
     <>
-      <PageHeader title="Vault" subtitle="Warranties, policies, plans, certificates and receipts." actions={<ButtonLink href="/upload" variant="primary" icon={<Upload className="size-4" aria-hidden />}>Upload document</ButtonLink>} />
+      <PageHeader title="Vault" subtitle="Warranties, policies, plans, certificates and receipts." actions={<ButtonLink href="/upload" variant={emptyVault ? "secondary" : "primary"} icon={<Upload className="size-4" aria-hidden />}>Upload document</ButtonLink>} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />

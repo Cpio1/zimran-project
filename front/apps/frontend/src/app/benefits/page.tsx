@@ -3,11 +3,10 @@
 import { Suspense, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Gift, Search } from "lucide-react";
-import clsx from "clsx";
 import { api, listAll } from "@/api/client";
 import type { Benefit } from "@/api/types";
 import { BenefitCard } from "@/components/Benefit";
-import { ButtonLink, EmptyState, ErrorBox, Input, ListSkeleton, PageHeader } from "@/components/ui";
+import { ButtonLink, EmptyState, ErrorBox, FilterButtons, Input, ListSkeleton, PageHeader } from "@/components/ui";
 import { daysUntil } from "@/lib/format";
 import { qk } from "@/lib/hooks";
 import { useDebounced } from "@/lib/useDebounced";
@@ -41,15 +40,14 @@ function BenefitsInner() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
           <Input type="search" aria-label="Search benefits" placeholder="Search benefits" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
         </div>
-        <div role="tablist" aria-label="Filter" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-          {FILTERS.map((x) => (
-            <button key={x.id} role="tab" aria-selected={filter === x.id} type="button" onClick={() => setFilter(x.id)}
-              className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", filter === x.id ? "bg-inverse text-on-inverse" : "bg-surface text-muted ring-1 ring-line hover:text-ink")}>
-              {x.label}
-              {list.data && <span className="ml-1.5 tabular-nums opacity-70">{list.data.filter(x.test).length}</span>}
-            </button>
-          ))}
-        </div>
+        {/* Jakob: these narrow one list, so they are filter buttons (aria-pressed), not tabs. */}
+        <FilterButtons
+          label="Filter benefits"
+          value={f.id}
+          onChange={setFilter}
+          options={FILTERS.map((x) => ({ value: x.id, label: x.label, count: list.data ? list.data.filter(x.test).length : undefined }))}
+          className="-mx-4 overflow-x-auto px-4 py-1.5 sm:mx-0 sm:flex-wrap sm:px-0"
+        />
       </div>
       {list.error && <ErrorBox error={list.error} onRetry={() => list.refetch()} />}
       {list.isLoading && <ListSkeleton rows={3} />}

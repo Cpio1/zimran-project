@@ -38,10 +38,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? "/";
   return (
     <div className="min-h-dvh">
+      {/* Decorative, static page background: behind everything, no pointer events, hidden from AT. */}
+      <div className="app-backdrop" aria-hidden="true" />
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:shadow">Skip to content</a>
 
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-line bg-surface px-3 py-5 md:flex">
+      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-line/80 bg-sidebar px-3 py-5 md:flex">
         <Link href="/" className="mb-1 flex items-center gap-2 px-2 text-lg font-semibold tracking-tight">
           <span className="grid size-7 place-items-center rounded-lg bg-accent text-sm text-on-accent" aria-hidden>C</span>
           Claimly

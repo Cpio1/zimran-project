@@ -145,19 +145,23 @@ export function PressFeedback() {
 }
 
 /** Confirmation length (--dur-confirm in globals.css). */
-export const CONFIRM_MS = 280;
+export const CONFIRM_MS = 240;
+/**
+ * When a confirmation hands over to the next action (analysis done → "Review results"), the
+ * cue starts this long into the confirmation instead of after it: 100 + 180 (cue) = 280 ms in all.
+ */
+export const HANDOVER_MS = 100;
 
 /**
- * Confirmation mark: grows from 0.85 to 1.05, springs back to 1 (follow-through), and a soft
+ * Confirmation mark: grows from 0.85 to 1.05 and settles at 1 (overshoot/settle), while a soft
  * disc of its own colour flashes behind it for extra contrast (.squish-pop + .status-confirm).
  * Render it only once the operation is confirmed; a new mount restarts it, so a repeated success
- * plays again. `afterMs` holds the first pose until a surrounding entrance has finished.
+ * plays again. A surrounding context may shift it with --confirm-delay/--confirm-dur (.toast-in).
  */
-export function SuccessIcon({ icon: Icon = CheckCircle2, className, afterMs }: { icon?: LucideIcon; className?: string; afterMs?: number }) {
-  const delay = afterMs ? { animationDelay: `${afterMs}ms` } : undefined;
+export function SuccessIcon({ icon: Icon = CheckCircle2, className }: { icon?: LucideIcon; className?: string }) {
   return (
-    <span className="status-confirm" style={delay}>
-      <Icon className={clsx("squish-pop shrink-0", className)} style={delay} aria-hidden />
+    <span className="status-confirm">
+      <Icon className={clsx("squish-pop shrink-0", className)} aria-hidden />
     </span>
   );
 }
@@ -187,7 +191,7 @@ export function useConfirmFlash(ms = 1200) {
  *     context never has two elements competing for attention.
  *   - `delayMs` lets a cue wait for an earlier pose to finish (e.g. a success check popping in).
  */
-const CUE_MS = 280; // --dur-cue
+const CUE_MS = 180; // --dur-cue
 let cueBusyUntil = 0;
 export function useStageCue(active: boolean, delayMs = 0) {
   const [play, setPlay] = useState(false);

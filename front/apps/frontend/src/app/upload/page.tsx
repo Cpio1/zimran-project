@@ -10,7 +10,7 @@ import { api } from "@/api/client";
 import { UPLOAD_LIMITS } from "@/api/config";
 import { ApiError, describeError } from "@/api/errors";
 import { trackJob, trackedJobs, untrackJob } from "@/api/jobs";
-import { CONFIRM_MS, SuccessIcon } from "@/components/motion";
+import { HANDOVER_MS, SuccessIcon } from "@/components/motion";
 import type { EntryCategory, Job } from "@/api/types";
 import { ACCEPTED_MIME, ENTRY_CATEGORIES } from "@/api/types";
 import { JobStatusView } from "@/components/JobStatus";
@@ -374,9 +374,10 @@ function UploadInner() {
                 href={`/review/${draft.entryId}`}
                 variant={stage === "review" ? "primary" : "secondary"}
                 size="lg"
-                // Wait for the success check to pop in first: one pose at a time.
+                // Snappy: the cue overlaps the analysis check (starts at 100 ms, ends at 280 ms).
+                // The link itself is usable the moment the API reports success — the cue is decoration.
                 cue={stage === "review"}
-                cueDelayMs={CONFIRM_MS}
+                cueDelayMs={HANDOVER_MS}
               >
                 Review results
               </ButtonLink>

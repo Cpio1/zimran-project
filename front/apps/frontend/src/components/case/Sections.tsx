@@ -14,7 +14,7 @@ import { JobStatusView } from "../JobStatus";
 import { useToast } from "../Toast";
 import { SuccessIcon, useConfirmFlash } from "../motion";
 import { Badge, Button, Card, Details, ErrorBox, Field, Input, Modal, Notice, SectionTitle, Select, Textarea, parsedField } from "../ui";
-import { CASE_STATUS_LABEL, formatCents, formatDateTime, parseMoney } from "@/lib/format";
+import { CASE_STATUS_LABEL, formatCents, formatDateTime, parseCount, parseMoney } from "@/lib/format";
 import { invalidate, qk, useJob } from "@/lib/hooks";
 
 // ───────── staging: the next action for the case's current state ─────────
@@ -423,8 +423,12 @@ function OutcomeForm({ c, existing, onSaved, onCancel }: { c: Case; existing: Ou
   const cashF = parsedField(cash, cashP, setCash);
   const estF = parsedField(est, estP, setEst);
   const usesUnits = kind === "service_used" || kind === "voucher_used";
-  const qtyN = qty === "" ? null : Number(qty);
-  const bad = Number.isNaN(cashC) || Number.isNaN(estC) || (usesUnits && qtyN !== null && (!Number.isInteger(qtyN) || qtyN < 0));
+  // Postel: " 2 ", "1,000", "2.0" are read as whole counts; "1.5" or "-1" are explained, never rounded.
+  // The contract allows a whole number ≥ 0 or nothing (null).
+  const qtyP = parseCount(qty);
+  const qtyN = qtyP.kind === "ok" ? qtyP.value : null;
+  const qtyF = parsedField(qty, qtyP, setQty);
+  const bad = Number.isNaN(cashC) || Number.isNaN(estC) || (usesUnits && (qtyP.kind === "invalid" || qtyP.kind === "ambiguous"));
   const m = useMutation({
     mutationFn: () => {
       const body: OutcomePut = {
@@ -451,8 +455,8 @@ function OutcomeForm({ c, existing, onSaved, onCancel }: { c: Case; existing: Ou
           </Field>
         )}
         {usesUnits && (
-          <Field label="How many used in this case" htmlFor="o-qty" hint={c.benefit_id ? "Updates the benefit's usage once." : undefined}>
-            <Input id="o-qty" type="number" min={0} step={1} value={qty} onChange={(e) => setQty(e.target.value)} />
+          <Field label="How many used in this case" htmlFor="o-qty" error={qtyF.error} hint={qtyF.hint ?? (c.benefit_id ? "A whole number. Updates the benefit's usage once." : "A whole number, 0 or more.")}>
+            <Input id="o-qty" type="text" inputMode="numeric" autoComplete="off" value={qty} onChange={(e) => setQty(e.target.value)} />
           </Field>
         )}
         {kind !== "cash_refund" && kind !== "denied" && kind !== "closed_without_result" && (

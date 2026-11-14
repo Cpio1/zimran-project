@@ -101,13 +101,13 @@ test("Postel: an ambiguous date is asked about, the typed text is kept", async (
 test("Jakob: filters live in the URL, so Back returns to the same view", async ({ page }) => {
   await uploadSample(page);
   await page.goto("/benefits");
-  await page.getByRole("tab", { name: /To confirm/ }).click();
+  await page.getByRole("button", { name: /To confirm/ }).click();
   await expect(page).toHaveURL(/filter=confirm/);
   await page.getByRole("link", { name: "Four dental cleaning services" }).click();
   await expect(page).toHaveURL(/\/benefits\/[0-9a-f-]{36}$/);
   await page.goBack();
   await expect(page).toHaveURL(/\/benefits\?filter=confirm$/);
-  await expect(page.getByRole("tab", { name: /To confirm/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("button", { name: /To confirm/ })).toHaveAttribute("aria-pressed", "true");
 });
 
 test("Frequency: navigation answers with colour only, no squash", async ({ page }) => {
