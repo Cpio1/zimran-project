@@ -16,6 +16,34 @@ import { Badge, Button, Card, Details, ErrorBox, Field, Input, Modal, Notice, Se
 import { CASE_STATUS_LABEL, formatCents, formatDateTime, parseDollarsToCents } from "@/lib/format";
 import { invalidate, qk, useJob } from "@/lib/hooks";
 
+// ───────── staging: the next action for the case's current state ─────────
+
+/** Which section holds the next thing the user can do. `null` = nothing to do (waiting or done). */
+export type CaseFocus = "assessment" | "initial" | "reply" | "follow_up" | "outcome" | null;
+
+export function caseFocus(c: Case, drafts: Draft[]): CaseFocus {
+  switch (c.status) {
+    case "draft":
+    case "prepared":
+      // Check first, then prepare the request, then send it (the draft section holds "I sent it").
+      return drafts.some((d) => d.kind === "initial") ? "initial" : c.assessment ? "initial" : "assessment";
+    case "submitted":
+    case "awaiting_response":
+      return "reply";
+    case "approved":
+      return "outcome";
+    case "denied":
+      return "follow_up";
+    case "resolved":
+      return null;
+  }
+}
+
+/** Is the next step the user's (true) or the company's (false)? Used by the case list. */
+export const USER_TURN: Record<CaseStatus, boolean> = {
+  draft: true, prepared: true, submitted: false, awaiting_response: true, approved: true, denied: true, resolved: false,
+};
+
 // ───────── case jobs (resumable) ─────────
 
 export function useCaseJobs(caseId: string, kinds: Job["kind"][]) {
@@ -115,14 +143,14 @@ const ASSESS: Record<NonNullable<Case["assessment"]>["status"], { label: string;
   likely_excluded: { label: "Likely not covered", tone: "danger" },
 };
 
-export function AssessmentSection({ c }: { c: Case }) {
+export function AssessmentSection({ c, focus }: { c: Case; focus?: boolean }) {
   const qc = useQueryClient();
   const jobs = useCaseJobs(c.id, ["assess"]);
   const run = useMutation({ mutationFn: () => api.assessCase(c.id, c.data_version), onSuccess: (j) => jobs.add(j) });
   const a = c.assessment;
   return (
-    <Card className="p-4">
-      <SectionTitle title="Assessment" action={<Button size="sm" icon={<Sparkles className="size-3.5" aria-hidden />} loading={run.isPending} disabled={jobs.ids.length > 0} onClick={() => run.mutate()}>{a ? "Re-check" : "Check"}</Button>} />
+    <Card tone={focus ? "focus" : "default"} className="p-4">
+      <SectionTitle title="Assessment" action={<Button size="sm" variant={focus && !a ? "primary" : "secondary"} cue={focus && !a} icon={<Sparkles className="size-3.5" aria-hidden />} loading={run.isPending} disabled={jobs.ids.length > 0} onClick={() => run.mutate()}>{a ? "Re-check" : "Check"}</Button>} />
       {jobs.ids.map((id) => (
         <CaseJob key={id} id={id} label="Checking your documents" onDone={() => invalidate(qc, "case", "cases")} onRetry={() => run.mutate()} onDismiss={() => jobs.remove(id)} />
       ))}
@@ -173,7 +201,7 @@ export function Checklist({ c, drafts }: { c: Case; drafts: Draft[] }) {
   };
   const auto = (i: string) => (i.startsWith("Send") && ["submitted", "awaiting_response", "approved", "denied", "resolved"].includes(c.status));
   return (
-    <Card className="p-4">
+    <Card tone="quiet" className="p-4">
       <SectionTitle title="Checklist" />
       <ul className="flex flex-col gap-1.5">
         {items.map((i) => (
@@ -191,30 +219,30 @@ export function Checklist({ c, drafts }: { c: Case; drafts: Draft[] }) {
 
 // ───────── drafts ─────────
 
-export function DraftSection({ c, kind, drafts, onMarkSent }: { c: Case; kind: Draft["kind"]; drafts: Draft[]; onMarkSent: () => void }) {
+export function DraftSection({ c, kind, drafts, onMarkSent, focus }: { c: Case; kind: Draft["kind"]; drafts: Draft[]; onMarkSent: () => void; focus?: boolean }) {
   const qc = useQueryClient();
   const jobs = useCaseJobs(c.id, [kind === "initial" ? "draft" : "draft_follow_up"]);
   const draft = drafts.find((d) => d.kind === kind);
   const gen = useMutation({ mutationFn: () => api.createDraft(c.id, { kind }, c.data_version), onSuccess: (j) => jobs.add(j) });
   const title = kind === "initial" ? "Request" : "Follow-up";
   return (
-    <Card className="p-4">
+    <Card tone={focus ? "focus" : "default"} className="p-4">
       <SectionTitle
         title={title}
-        action={<Button size="sm" icon={draft ? <RefreshCw className="size-3.5" aria-hidden /> : <Sparkles className="size-3.5" aria-hidden />} loading={gen.isPending} disabled={jobs.ids.length > 0} onClick={() => gen.mutate()}>{draft ? "Regenerate" : kind === "initial" ? "Prepare request" : "Prepare follow-up"}</Button>}
+        action={<Button size="sm" variant={focus && !draft ? "primary" : "secondary"} cue={focus && !draft} icon={draft ? <RefreshCw className="size-3.5" aria-hidden /> : <Sparkles className="size-3.5" aria-hidden />} loading={gen.isPending} disabled={jobs.ids.length > 0} onClick={() => gen.mutate()}>{draft ? "Regenerate" : kind === "initial" ? "Prepare request" : "Prepare follow-up"}</Button>}
       />
       {jobs.ids.map((id) => (
         <CaseJob key={id} id={id} label={`Writing the ${title.toLowerCase()}`} onDone={() => invalidate(qc, "drafts", "events", "case", "cases")} onRetry={() => gen.mutate()} onDismiss={() => jobs.remove(id)} />
       ))}
       {gen.error && <ErrorBox error={gen.error} onRetry={() => gen.mutate()} />}
-      {draft ? <DraftEditor key={draft.id + draft.input_version} draft={draft} onMarkSent={onMarkSent} showSent={kind === "initial" ? ["draft", "prepared"].includes(c.status) : true} /> : !jobs.ids.length && (
+      {draft ? <DraftEditor key={draft.id + draft.input_version} draft={draft} onMarkSent={onMarkSent} showSent={kind === "initial" ? ["draft", "prepared"].includes(c.status) : true} focus={focus} /> : !jobs.ids.length && (
         <p className="text-sm text-muted">{kind === "initial" ? "Claimly drafts a message to the company from your documents. You edit and send it yourself." : "After a reply, prepare a follow-up that answers it."}</p>
       )}
     </Card>
   );
 }
 
-function DraftEditor({ draft, onMarkSent, showSent }: { draft: Draft; onMarkSent: () => void; showSent: boolean }) {
+function DraftEditor({ draft, onMarkSent, showSent, focus }: { draft: Draft; onMarkSent: () => void; showSent: boolean; focus?: boolean }) {
   const qc = useQueryClient();
   const toast = useToast();
   const [subject, setSubject] = useState(draft.content.subject);
@@ -255,8 +283,9 @@ function DraftEditor({ draft, onMarkSent, showSent }: { draft: Draft; onMarkSent
       ) : <ErrorBox error={save.error} onRetry={() => save.mutate()} />)}
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" icon={<ClipboardCopy className="size-4" aria-hidden />} onClick={copy}>Copy</Button>
+        {/* One main action: unsaved edits come first; otherwise, when sending is the next step, "I sent it". */}
         <Button variant={dirty ? "primary" : "secondary"} disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}>Save edits</Button>
-        {showSent && <Button icon={<Send className="size-4" aria-hidden />} onClick={onMarkSent}>I sent it</Button>}
+        {showSent && <Button variant={focus && !dirty ? "primary" : "secondary"} cue={focus && !dirty} icon={<Send className="size-4" aria-hidden />} onClick={onMarkSent}>I sent it</Button>}
       </div>
     </div>
   );
@@ -264,7 +293,7 @@ function DraftEditor({ draft, onMarkSent, showSent }: { draft: Draft; onMarkSent
 
 // ───────── company reply ─────────
 
-export function ReplySection({ c, docs }: { c: Case; docs: Document[] }) {
+export function ReplySection({ c, docs, focus }: { c: Case; docs: Document[]; focus?: boolean }) {
   const qc = useQueryClient();
   const jobs = useCaseJobs(c.id, ["analyze_reply"]);
   const [text, setText] = useState("");
@@ -278,7 +307,7 @@ export function ReplySection({ c, docs }: { c: Case; docs: Document[] }) {
     },
   });
   return (
-    <Card className="p-4">
+    <Card tone={focus ? "focus" : "default"} className="p-4">
       <SectionTitle title="Company reply" />
       <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); m.mutate(); }}>
         <Field label="Paste the reply" htmlFor={`reply-${c.id}`}>
@@ -298,7 +327,7 @@ export function ReplySection({ c, docs }: { c: Case; docs: Document[] }) {
           </fieldset>
         )}
         {m.error && <ErrorBox error={m.error} onRetry={() => m.mutate()} />}
-        <Button type="submit" variant="primary" className="self-start" icon={<MessageSquareReply className="size-4" aria-hidden />} disabled={!text.trim() && !picked.length} loading={m.isPending}>Analyze reply</Button>
+        <Button type="submit" variant={focus ? "primary" : "secondary"} className="self-start" icon={<MessageSquareReply className="size-4" aria-hidden />} disabled={!text.trim() && !picked.length} loading={m.isPending}>Analyze reply</Button>
       </form>
       <div className="mt-3 flex flex-col gap-2">
         {jobs.ids.map((id) => (
@@ -330,7 +359,7 @@ const OUTCOME_LABEL: Record<Outcome["kind"], string> = {
   voucher_used: "Certificate used", denied: "Denied", closed_without_result: "Closed without result",
 };
 
-export function OutcomeSection({ c }: { c: Case }) {
+export function OutcomeSection({ c, focus }: { c: Case; focus?: boolean }) {
   const qc = useQueryClient();
   const outcome = useQuery({
     queryKey: qk.outcome(c.id),
@@ -343,7 +372,7 @@ export function OutcomeSection({ c }: { c: Case }) {
   if (outcome.isLoading) return null;
   const o = outcome.data;
   return (
-    <Card className="p-4">
+    <Card tone={focus ? "focus" : "default"} className="p-4">
       <SectionTitle title="Result" action={o && !editing ? <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>Edit</Button> : undefined} />
       {outcome.error && <ErrorBox error={outcome.error} onRetry={() => outcome.refetch()} />}
       {o && !editing ? (
@@ -359,7 +388,7 @@ export function OutcomeSection({ c }: { c: Case }) {
       ) : o === null && !editing ? (
         <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center">
           <p className="flex-1 text-muted">When it&apos;s settled, record what you actually got — money, a service, a repair, or nothing.</p>
-          <Button size="sm" onClick={() => setEditing(true)}>Record result</Button>
+          <Button size="sm" variant={focus ? "primary" : "secondary"} cue={focus} onClick={() => setEditing(true)}>Record result</Button>
         </div>
       ) : (
         <OutcomeForm c={c} existing={o ?? null} onSaved={(saved) => { qc.setQueryData(qk.outcome(c.id), saved); invalidate(qc, "events", "dashboard", "benefit", "benefits", "case", "cases"); setEditing(false); }} onCancel={() => setEditing(false)} />

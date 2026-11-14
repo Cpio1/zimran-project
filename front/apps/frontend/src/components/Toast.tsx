@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, X } from "lucide-react";
 import clsx from "clsx";
 import { SuccessIcon } from "./motion";
@@ -13,26 +13,82 @@ interface Toast {
 const Ctx = createContext<(text: string, tone?: Toast["tone"]) => void>(() => {});
 export const useToast = () => useContext(Ctx);
 
+/** How long a toast stays in its steady pose. */
+const VISIBLE_MS: Record<Toast["tone"], number> = { ok: 3500, warn: 7000, error: 7000 };
+/** Exit pose length (--dur-exit in globals.css); the next toast enters only after it. */
+const EXIT_MS = 160;
+/** Enter pose length (--dur-enter); the success check pops in after it. */
+const ENTER_MS = 240;
+const MAX_QUEUED = 4;
+
+/**
+ * Staging: toasts are shown one at a time. Several notifications in a row queue up and each
+ * gets its own enter → steady → exit sequence. Hovering or focusing the visible toast pauses
+ * its timer; dismissing it skips straight to its exit.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<Toast[]>([]);
+  const [queue, setQueue] = useState<Toast[]>([]);
+  const [leaving, setLeaving] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const remaining = useRef(0);
+  const head = queue[0];
+
   const push = useCallback((text: string, tone: Toast["tone"] = "ok") => {
-    const id = Date.now() + Math.random();
-    setItems((x) => [...x.slice(-2), { id, text, tone }]);
-    setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), tone === "ok" ? 3500 : 7000);
+    setQueue((q) => (q.some((t) => t.text === text && t.tone === tone) ? q : [...q, { id: Date.now() + Math.random(), text, tone }].slice(-MAX_QUEUED)));
   }, []);
+
+  // A new toast becomes visible: start its steady pose with the full duration.
+  useEffect(() => {
+    if (head) remaining.current = VISIBLE_MS[head.tone];
+  }, [head]);
+
+  // Steady pose; pausing keeps whatever time is left.
+  useEffect(() => {
+    if (!head || paused || leaving) return;
+    const started = performance.now();
+    const t = window.setTimeout(() => setLeaving(true), Math.max(0, remaining.current));
+    return () => {
+      window.clearTimeout(t);
+      remaining.current -= performance.now() - started;
+    };
+  }, [head, paused, leaving]);
+
+  // Exit pose, then hand over to the next toast.
+  useEffect(() => {
+    if (!leaving) return;
+    const t = window.setTimeout(() => {
+      setQueue((q) => q.slice(1));
+      setLeaving(false);
+      setPaused(false);
+    }, EXIT_MS);
+    return () => window.clearTimeout(t);
+  }, [leaving]);
+
   return (
     <Ctx.Provider value={push}>
       {children}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4 md:bottom-6">
-        {items.map((t) => (
-          <div key={t.id} className={clsx("pointer-events-auto flex max-w-md items-start gap-3 rounded-lg px-4 py-3 text-sm text-white shadow-lg", t.tone === "ok" ? "bg-ink" : t.tone === "warn" ? "bg-amber-700" : "bg-red-700")}>
-            {t.tone === "ok" && <SuccessIcon icon={Check} className="mt-0.5 size-4 text-brand-200" />}
-            <span className="min-w-0 flex-1">{t.text}</span>
-            <button type="button" aria-label="Dismiss" data-squish="" className="squish-icon" onClick={() => setItems((x) => x.filter((y) => y.id !== t.id))}>
+      <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center px-4 md:bottom-6">
+        {head && (
+          <div
+            key={head.id}
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
+            className={clsx(
+              "pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-lg px-4 py-3 text-sm text-white shadow-lg",
+              leaving ? "toast-out" : "toast-in",
+              head.tone === "ok" ? "bg-ink" : head.tone === "warn" ? "bg-amber-700" : "bg-red-700",
+            )}
+          >
+            {head.tone === "ok" && <SuccessIcon icon={Check} afterMs={ENTER_MS} className="mt-0.5 size-4 text-brand-200" />}
+            <span className="min-w-0 flex-1">{head.text}</span>
+            {queue.length > 1 && <span className="shrink-0 text-xs text-white/70">+{queue.length - 1}</span>}
+            <button type="button" aria-label="Dismiss" data-squish="" className="squish-icon" onClick={() => setLeaving(true)}>
               <X className="size-4" aria-hidden />
             </button>
           </div>
-        ))}
+        )}
       </div>
     </Ctx.Provider>
   );

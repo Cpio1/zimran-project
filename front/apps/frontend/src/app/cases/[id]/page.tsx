@@ -10,7 +10,7 @@ import type { Case, CaseStatus, Document } from "@/api/types";
 import { Chat } from "@/components/Chat";
 import { useOpenEvidence } from "@/components/Evidence";
 import { ReminderModal } from "@/components/Reminders";
-import { AssessmentSection, Checklist, DraftSection, OutcomeSection, ReplySection, StatusModal, Timeline } from "@/components/case/Sections";
+import { AssessmentSection, Checklist, DraftSection, OutcomeSection, ReplySection, StatusModal, Timeline, caseFocus } from "@/components/case/Sections";
 import { Badge, Button, Card, ErrorBox, Field, Input, ListSkeleton, Modal, PageHeader, SectionTitle, Textarea } from "@/components/ui";
 import { CASE_NEXT_STEP, CASE_STATUS_LABEL, CASE_TYPE_LABEL, addDaysISO, formatDate, todayISO } from "@/lib/format";
 import { invalidate, qk } from "@/lib/hooks";
@@ -36,6 +36,9 @@ export default function CasePage() {
   const x = c.data;
   const d = drafts.data ?? [];
   const replied = ["submitted", "awaiting_response", "approved", "denied", "resolved"].includes(x.status);
+  // Staging: the section that holds the next action for this state gets the focus tone and the
+  // page's one main button; the rest stay fully usable but visually secondary.
+  const focus = drafts.data ? caseFocus(x, d) : null;
 
   return (
     <>
@@ -46,14 +49,14 @@ export default function CasePage() {
           <span className="flex flex-wrap items-center gap-2">
             <Badge tone="brand">{CASE_STATUS_LABEL[x.status]}</Badge>
             <Badge>{CASE_TYPE_LABEL[x.type]}</Badge>
-            <span>Next: {CASE_NEXT_STEP[x.status]}</span>
+            <span className={focus ? "font-medium text-ink" : undefined}>Next: {CASE_NEXT_STEP[x.status]}</span>
           </span>
         }
         actions={<Button onClick={() => setStatusFor(x.status === "draft" || x.status === "prepared" ? "submitted" : x.status === "submitted" ? "awaiting_response" : x.status)}>Update stage</Button>}
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex min-w-0 flex-col gap-5">
-          <Card className="p-4">
+          <Card tone="quiet" className="p-4">
             <SectionTitle title="About this case" action={<Button size="sm" variant="ghost" icon={<Pencil className="size-3.5" aria-hidden />} onClick={() => setEditOpen(true)}>Edit</Button>} />
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <div className="sm:col-span-2"><dt className="text-xs text-muted">Situation</dt><dd className="whitespace-pre-line">{x.situation || "—"}</dd></div>
@@ -79,11 +82,11 @@ export default function CasePage() {
               ) : <p className="text-sm text-muted">None selected.</p>}
             </div>
           </Card>
-          <AssessmentSection c={x} />
-          <DraftSection c={x} kind="initial" drafts={d} onMarkSent={() => setStatusFor("submitted")} />
-          {replied && <ReplySection c={x} docs={docList} />}
-          {replied && <DraftSection c={x} kind="follow_up" drafts={d} onMarkSent={() => setStatusFor("submitted")} />}
-          <OutcomeSection c={x} />
+          <AssessmentSection c={x} focus={focus === "assessment"} />
+          <DraftSection c={x} kind="initial" drafts={d} focus={focus === "initial"} onMarkSent={() => setStatusFor("submitted")} />
+          {replied && <ReplySection c={x} docs={docList} focus={focus === "reply"} />}
+          {replied && <DraftSection c={x} kind="follow_up" drafts={d} focus={focus === "follow_up"} onMarkSent={() => setStatusFor("submitted")} />}
+          <OutcomeSection c={x} focus={focus === "outcome"} />
           <Timeline c={x} />
         </div>
         <div className="flex min-w-0 flex-col gap-5">
@@ -93,7 +96,7 @@ export default function CasePage() {
             {thread.data ? <Chat thread={thread.data} className="flex-1" placeholder="Ask about this case" /> : thread.error ? <ErrorBox error={thread.error} /> : <ListSkeleton rows={1} />}
           </Card>
           <Checklist c={x} drafts={d} />
-          <Card className="p-4">
+          <Card tone="quiet" className="p-4">
             <SectionTitle title="Reminders" action={<Button size="sm" icon={<BellPlus className="size-3.5" aria-hidden />} onClick={() => setRemOpen(true)}>Add</Button>} />
             {reminders.data?.data.filter((r) => r.status !== "cancelled").length ? (
               <ul className="flex flex-col gap-2 text-sm">

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { forwardRef, useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { AlertTriangle, ChevronRight, Info, Loader2, X } from "lucide-react";
 import { describeError } from "@/api/errors";
+import { useStageCue } from "./motion";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "subtleDanger";
 /**
  * `root` styles the label (it never transforms); `surface` styles the background layer,
  * which squashes on press (see .squish-surface in globals.css). Bordered variants keep a
@@ -17,6 +18,8 @@ const variants: Record<Variant, { root: string; surface: string }> = {
   secondary: { root: "border border-transparent text-ink disabled:text-muted", surface: "-inset-px border border-line bg-white group-hover:bg-stone-50" },
   ghost: { root: "text-ink disabled:text-muted", surface: "inset-0 group-hover:bg-stone-100" },
   danger: { root: "border border-transparent text-red-700", surface: "-inset-px border border-red-200 bg-white group-hover:bg-red-50" },
+  /** A destructive action that must not compete with a dialog's main action. */
+  subtleDanger: { root: "text-red-700 disabled:text-red-700/50", surface: "inset-0 group-hover:bg-red-50" },
 };
 const sizes = { sm: "h-8 px-3 text-sm", md: "h-10 px-4 text-sm", lg: "h-12 px-5 text-base" };
 const buttonBase = "group relative isolate inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium";
@@ -29,11 +32,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: keyof typeof sizes;
   loading?: boolean;
   icon?: ReactNode;
+  /**
+   * Staging: true while this is the next action the current state asks for. When it turns true
+   * (not on mount) the button plays one short attention cue; see useStageCue.
+   */
+  cue?: boolean;
 }
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = "secondary", size = "md", loading, icon, className, children, disabled, type = "button", ...rest },
+  { variant = "secondary", size = "md", loading, icon, cue, className, children, disabled, type = "button", ...rest },
   ref,
 ) {
+  const playCue = useStageCue(!!cue && !disabled && !loading);
   return (
     <button
       ref={ref}
@@ -41,6 +50,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       data-squish=""
+      data-variant={variant}
+      data-stage-cue={playCue || undefined}
       className={clsx(buttonBase, "disabled:cursor-not-allowed", variants[variant].root, sizes[size], className)}
       {...rest}
     >
@@ -51,9 +62,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   );
 });
 
-export function ButtonLink({ href, variant = "secondary", size = "md", icon, className, children }: { href: string; variant?: Variant; size?: keyof typeof sizes; icon?: ReactNode; className?: string; children: ReactNode }) {
+export function ButtonLink({ href, variant = "secondary", size = "md", icon, cue, cueDelayMs, className, children }: { href: string; variant?: Variant; size?: keyof typeof sizes; icon?: ReactNode; cue?: boolean; cueDelayMs?: number; className?: string; children: ReactNode }) {
+  const playCue = useStageCue(!!cue, cueDelayMs);
   return (
-    <Link href={href} data-squish="" className={clsx(buttonBase, variants[variant].root, sizes[size], className)}>
+    <Link href={href} data-squish="" data-variant={variant} data-stage-cue={playCue || undefined} className={clsx(buttonBase, variants[variant].root, sizes[size], className)}>
       <Surface variant={variant} />
       {icon}
       {children}
@@ -61,8 +73,23 @@ export function ButtonLink({ href, variant = "secondary", size = "md", icon, cla
   );
 }
 
-export function Card({ className, children, as: As = "section" }: { className?: string; children: ReactNode; as?: "section" | "div" | "article" | "li" }) {
-  return <As className={clsx("rounded-xl border border-line bg-white", className)}>{children}</As>;
+/**
+ * Staging tones. `focus` marks the one block the current step is about, `quiet` steps supporting
+ * blocks back (lighter surface, softer border) while keeping their text at full contrast.
+ */
+const cardTones = {
+  default: "border-line bg-white",
+  quiet: "border-line/70 bg-white/60",
+  focus: "stage-focus border-brand-200 bg-white",
+};
+export type CardTone = keyof typeof cardTones;
+export function Card({ className, children, as: As = "section", tone = "default", cue, ...rest }: { className?: string; children: ReactNode; as?: "section" | "div" | "article" | "li"; tone?: CardTone; cue?: boolean; "aria-labelledby"?: string; "aria-label"?: string }) {
+  const playCue = useStageCue(!!cue && tone === "focus");
+  return (
+    <As data-tone={tone} data-stage-cue={playCue || undefined} className={clsx("rounded-xl border", cardTones[tone], className)} {...rest}>
+      {children}
+    </As>
+  );
 }
 
 export function SectionTitle({ title, action, id }: { title: string; action?: ReactNode; id?: string }) {
@@ -170,17 +197,33 @@ export function ErrorBox({ error, onRetry, onReload }: { error: unknown; onRetry
 
 export function Modal({ open, onClose, title, children, footer, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   useEffect(() => {
     const d = ref.current;
-    if (!d) return;
-    if (open && !d.open) {
+    if (!d || !open) return;
+    // Where focus was before the dialog took it; it goes back there when the dialog closes,
+    // including when the dialog is unmounted rather than closed (Safari doesn't restore it).
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (!d.open) {
       d.showModal?.();
-      // showModal focuses the first control (the close button); prefer the marked field.
-      d.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+      // showModal focuses the first control, which is the close button. For a form, start in
+      // the marked field or the first field instead; a plain confirmation keeps the close button.
+      d.querySelector<HTMLElement>("[data-autofocus]")?.focus() ??
+        d.querySelector<HTMLElement>("[data-modal-body] :is(input:not([type=hidden]), select, textarea):not(:disabled)")?.focus();
     }
-    if (!open && d.open) d.close?.();
+    return () => {
+      if (d.open) d.close?.();
+      const lost = !document.activeElement || document.activeElement === document.body || d.contains(document.activeElement);
+      if (opener?.isConnected && lost) opener.focus({ preventScroll: true });
+    };
   }, [open]);
+  useEffect(() => {
+    // Staging guard: a dialog has one main action, everything else is visibly secondary.
+    if (process.env.NODE_ENV === "production" || !open) return;
+    const n = footerRef.current?.querySelectorAll('[data-variant="primary"]').length ?? 0;
+    if (n > 1) console.warn(`[Claimly] Dialog "${title}" shows ${n} primary actions; keep one.`);
+  });
   return (
     <dialog
       ref={ref}
@@ -193,15 +236,20 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
       className={clsx("m-auto max-h-[90dvh] w-[calc(100%-2rem)] overflow-hidden rounded-xl border border-line bg-white p-0 text-ink shadow-xl", wide ? "max-w-3xl" : "max-w-lg")}
     >
       {open && (
-        <div className="flex max-h-[90dvh] flex-col">
+        <div className="dialog-in flex max-h-[90dvh] flex-col">
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
             <h2 id={titleId} className="font-semibold">{title}</h2>
             <button type="button" onClick={onClose} data-squish="" className="squish-icon rounded-md p-1 text-muted hover:bg-stone-100" aria-label="Close">
               <X className="size-5" aria-hidden />
             </button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
-          {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-3">{footer}</div>}
+          <div data-modal-body="" className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
+          {footer && (
+            // Phones: full-width buttons with the main action on top; wider screens: one row, main action last (right).
+            <div ref={footerRef} className="flex flex-col-reverse gap-2 border-t border-line px-4 py-3 *:w-full sm:flex-row sm:flex-wrap sm:justify-end sm:*:w-auto">
+              {footer}
+            </div>
+          )}
         </div>
       )}
     </dialog>

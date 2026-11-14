@@ -39,7 +39,7 @@ export function DeadlineControls({ b }: { b: Benefit }) {
   return (
     <div className="flex flex-col gap-2 text-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">{b.deadline_date ? formatDate(b.deadline_date) : "No confirmed date"}</span>
+        <span className="text-base font-semibold">{b.deadline_date ? formatDate(b.deadline_date) : "No confirmed date"}</span>
         <Badge tone={b.deadline_status === "needs_review" ? "warn" : b.deadline_status === "not_known" ? "neutral" : "brand"}>{DEADLINE_STATUS_LABEL[b.deadline_status]}</Badge>
       </div>
       {rule && <p className="text-xs text-muted">Document says: {rule}{b.deadline_rule?.last_day_inclusion === "unknown" ? " · unclear whether the last day counts" : ""}</p>}
@@ -64,45 +64,53 @@ export function DeadlineControls({ b }: { b: Benefit }) {
   );
 }
 
-export function BenefitReviewCard({ b }: { b: Benefit }) {
+/**
+ * Review card, staged: the benefit, its date and its limit come first; the full conditions
+ * and the quotes behind them open on request. `active` marks the one card whose confirmation
+ * is the next step on the page — only that card gets the main button and the focus tone.
+ */
+export function BenefitReviewCard({ b, active }: { b: Benefit; active?: boolean }) {
   const m = useBenefitPatch(b);
   const qc = useQueryClient();
   const value = formatCents(b.stated_value_cents);
+  const more = b.conditions.length + b.evidence_refs.length;
   return (
-    <Card as="article" className="flex flex-col gap-3 p-4">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Badge tone="brand">{BENEFIT_TYPE_LABEL[b.type]}</Badge>
-        {b.needs_review && <NeedsReview />}
-      </div>
+    <Card as="article" tone={active ? "focus" : "default"} className="flex flex-col gap-4 p-4 sm:p-5">
       <div>
-        <h3 className="font-semibold"><Link href={`/benefits/${b.id}`} className="hover:underline">{b.title}</Link></h3>
-        <p className="mt-1 text-sm text-muted">{b.description}</p>
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <Badge tone="brand">{BENEFIT_TYPE_LABEL[b.type]}</Badge>
+          {b.needs_review && <NeedsReview />}
+        </div>
+        <h3 className="text-lg font-semibold leading-snug"><Link href={`/benefits/${b.id}`} className="hover:underline">{b.title}</Link></h3>
+        {b.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{b.description}</p>}
       </div>
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="grid gap-4 text-sm sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <dt className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">Date</dt>
+          <dd><DeadlineControls b={b} /></dd>
+        </div>
         <div>
-          <dt className="text-xs text-muted">Limit</dt>
+          <dt className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">Limit</dt>
           <dd><UsageMeter b={b} /></dd>
         </div>
         {value && (
           <div>
-            <dt className="text-xs text-muted">Stated value</dt>
+            <dt className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">Stated value</dt>
             <dd className="font-medium">{value} <span className="text-xs font-normal text-muted">(printed value, not cash)</span></dd>
           </div>
         )}
-        <div className="sm:col-span-2">
-          <dt className="text-xs text-muted">Date</dt>
-          <dd><DeadlineControls b={b} /></dd>
-        </div>
       </dl>
-      {b.conditions.length > 0 && (
-        <Details summary={`Conditions (${b.conditions.length})`}>
-          <ul className="list-disc space-y-1 pl-5">{b.conditions.map((c) => <li key={c}>{c}</li>)}</ul>
+      {more > 0 && (
+        <Details summary={`Conditions and sources (${more})`}>
+          <div className="flex flex-col gap-3">
+            {b.conditions.length > 0 && <ul className="list-disc space-y-1 pl-5">{b.conditions.map((c) => <li key={c}>{c}</li>)}</ul>}
+            <EvidenceChips refs={b.evidence_refs} max={b.evidence_refs.length} />
+          </div>
         </Details>
       )}
-      <EvidenceChips refs={b.evidence_refs} max={2} />
       {b.needs_review && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-          <Button size="sm" variant="primary" icon={<Check className="size-3.5" aria-hidden />} loading={m.isPending} onClick={() => m.mutate({ confirmed_review: true })}>Looks right</Button>
+        <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center">
+          <Button size={active ? "md" : "sm"} variant={active ? "primary" : "secondary"} cue={active} icon={<Check className="size-3.5" aria-hidden />} loading={m.isPending} onClick={() => m.mutate({ confirmed_review: true })}>Looks right</Button>
           <span className="text-xs text-muted">Confirms the details match your document. Usage is confirmed separately.</span>
         </div>
       )}

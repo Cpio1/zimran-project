@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { FolderKanban, Plus } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, FolderKanban, Plus } from "lucide-react";
 import { api, listAll } from "@/api/client";
 import type { CaseStatus, CaseType } from "@/api/types";
 import { CASE_STATUSES, CASE_TYPES } from "@/api/types";
+import { USER_TURN } from "@/components/case/Sections";
 import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, ListSkeleton, Modal, PageHeader, Select, Textarea } from "@/components/ui";
 import { CASE_NEXT_STEP, CASE_STATUS_LABEL, CASE_TYPE_LABEL, CATEGORY_LABEL, formatDate } from "@/lib/format";
 import { invalidate, qk, useAllEntries } from "@/lib/hooks";
@@ -20,7 +21,12 @@ export default function CasesPage() {
 
   return (
     <>
-      <PageHeader title="Cases" subtitle="Requests to companies, from first message to the result." actions={<Button variant="primary" icon={<Plus className="size-4" aria-hidden />} onClick={() => setNewOpen(true)}>New case</Button>} />
+      <PageHeader
+        title="Cases"
+        subtitle="Requests to companies, from first message to the result."
+        // While the list is empty the empty state carries the one main "New case" button.
+        actions={<Button variant={list.data?.length === 0 && !status ? "secondary" : "primary"} icon={<Plus className="size-4" aria-hidden />} onClick={() => setNewOpen(true)}>New case</Button>}
+      />
       <div role="tablist" aria-label="Stage" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         {(["", ...CASE_STATUSES] as const).map((s) => (
           <button key={s || "all"} role="tab" aria-selected={status === s} type="button" onClick={() => setStatus(s)}
@@ -35,21 +41,34 @@ export default function CasesPage() {
         <EmptyState icon={<FolderKanban className="size-8" aria-hidden />} title={status ? "No cases at this stage" : "No cases yet"} body="Start one from a benefit with “Plan to use”, or open a new case for a warranty claim, a return or a delayed refund." action={!status && <Button variant="primary" onClick={() => setNewOpen(true)}>New case</Button>} />
       )}
       <ul className="flex flex-col gap-3">
-        {list.data?.map((c) => (
-          <Card as="li" key={c.id} className="hover:border-brand-200">
-            <Link href={`/cases/${c.id}`} className="flex flex-col gap-1.5 p-4 sm:flex-row sm:items-center sm:gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                  <Badge tone="brand">{CASE_STATUS_LABEL[c.status]}</Badge>
-                  <Badge>{CASE_TYPE_LABEL[c.type]}</Badge>
+        {list.data?.map((c) => {
+          const yours = USER_TURN[c.status];
+          const done = c.status === "resolved";
+          return (
+            <Card as="li" key={c.id} tone={yours ? "default" : "quiet"} className="hover:border-brand-200">
+              <Link href={`/cases/${c.id}`} data-squish="" className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                    <Badge tone={yours ? "brand" : "neutral"}>{CASE_STATUS_LABEL[c.status]}</Badge>
+                    <Badge>{CASE_TYPE_LABEL[c.type]}</Badge>
+                  </div>
+                  <h2 className="font-semibold">{c.title}</h2>
+                  {/* Staging: the next step is the line to act on when it's the user's turn. */}
+                  <p className={clsx("mt-1 flex items-start gap-1.5 text-sm", yours ? "font-medium text-brand-700" : "text-muted")}>
+                    {yours ? <ArrowRight data-anticipate="right" className="mt-0.5 size-4 shrink-0" aria-hidden />
+                      : done ? <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
+                      : <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />}
+                    <span className="min-w-0">
+                      <span className="sr-only">{yours ? "Your next step: " : done ? "" : "Waiting: "}</span>
+                      {CASE_NEXT_STEP[c.status]}
+                    </span>
+                  </p>
                 </div>
-                <h2 className="font-semibold">{c.title}</h2>
-                <p className="text-sm text-muted">Next: {CASE_NEXT_STEP[c.status]}</p>
-              </div>
-              <p className="text-xs text-muted">Updated {formatDate(c.updated_at)}</p>
-            </Link>
-          </Card>
-        ))}
+                <p className="text-xs text-muted">Updated {formatDate(c.updated_at)}</p>
+              </Link>
+            </Card>
+          );
+        })}
       </ul>
       {newOpen && <NewCaseModal onClose={() => setNewOpen(false)} />}
     </>

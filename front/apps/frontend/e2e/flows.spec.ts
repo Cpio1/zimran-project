@@ -37,6 +37,8 @@ test("opens without login, auto demo session, data survives refresh", async ({ p
 
 test("upload → review → certificate 4/1/3 → chat → matching → case → draft → copy → sent → reply → follow-up", async ({ page }) => {
   await uploadSample(page);
+  // Review shows the benefit, date and limit first; conditions and sources open on request.
+  await page.getByText(/Conditions and sources/).first().click();
   // Source opens via backend content (blob URL, no token in URL).
   await page.getByRole("button", { name: /This certificate includes four/ }).first().click();
   const frame = page.locator("iframe[title*='page 1']");

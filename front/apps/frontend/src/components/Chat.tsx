@@ -175,7 +175,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
             placeholder={placeholder ?? (purpose === "match_need" ? "Describe what you need, e.g. “my laptop screen broke”" : "Ask about your documents")}
             className="max-h-40 min-h-10 w-full min-w-0 flex-1 resize-y rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
-          <Button type="submit" variant="primary" aria-label="Send" disabled={!text.trim()} className="size-10 px-0">
+          <Button type="submit" variant={text.trim() ? "primary" : "secondary"} aria-label="Send" disabled={!text.trim()} className="size-10 px-0">
             <ArrowUp data-anticipate="up" className="size-4" aria-hidden />
           </Button>
         </div>

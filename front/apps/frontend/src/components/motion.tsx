@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, type LucideIcon } from "lucide-react";
 
 /**
@@ -133,9 +133,50 @@ export function PressFeedback() {
 }
 
 /**
- * Success mark with a short elastic entrance. Render it only once the backend has confirmed
- * the operation; the animation plays when the icon mounts.
+ * Success check: smaller → slightly past full size → settle (.squish-pop). Render it only once
+ * the operation is confirmed; the sequence plays when the icon mounts, so a new success (a new
+ * mount) restarts it. `afterMs` holds the first pose until a surrounding entrance has finished,
+ * keeping one movement at a time.
  */
-export function SuccessIcon({ icon: Icon = CheckCircle2, className }: { icon?: LucideIcon; className?: string }) {
-  return <Icon className={clsx("squish-pop shrink-0", className)} aria-hidden />;
+export function SuccessIcon({ icon: Icon = CheckCircle2, className, afterMs }: { icon?: LucideIcon; className?: string; afterMs?: number }) {
+  return <Icon className={clsx("squish-pop shrink-0", className)} style={afterMs ? { animationDelay: `${afterMs}ms` } : undefined} aria-hidden />;
+}
+
+/**
+ * Staging cue: one short attention pose for the element that just became the next action.
+ *
+ * Returns true while the cue plays; callers put it on `data-stage-cue` (see globals.css).
+ *   - It fires only on a real state transition false → true, never on mount, so revisiting a
+ *     page doesn't make things jump.
+ *   - One cue at a time app-wide: if another cue is already playing, this one is skipped, so a
+ *     context never has two elements competing for attention.
+ *   - `delayMs` lets a cue wait for an earlier pose to finish (e.g. a success check popping in).
+ */
+const CUE_MS = 900;
+let cueBusyUntil = 0;
+export function useStageCue(active: boolean, delayMs = 0) {
+  const [play, setPlay] = useState(false);
+  const prev = useRef(active);
+  useEffect(() => {
+    const was = prev.current;
+    prev.current = active;
+    if (!active) {
+      setPlay(false);
+      return;
+    }
+    if (was) return;
+    const t = window.setTimeout(() => {
+      const now = performance.now();
+      if (now < cueBusyUntil) return;
+      cueBusyUntil = now + CUE_MS;
+      setPlay(true);
+    }, delayMs);
+    return () => window.clearTimeout(t);
+  }, [active, delayMs]);
+  useEffect(() => {
+    if (!play) return;
+    const t = window.setTimeout(() => setPlay(false), CUE_MS);
+    return () => window.clearTimeout(t);
+  }, [play]);
+  return play;
 }

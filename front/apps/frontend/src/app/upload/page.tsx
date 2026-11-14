@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, FlaskConical, ImageIcon, Trash2, UploadCloud } from "lucide-react";
+import { Check, FileText, FlaskConical, ImageIcon, Trash2, UploadCloud } from "lucide-react";
 import { api } from "@/api/client";
 import { UPLOAD_LIMITS } from "@/api/config";
 import { ApiError, describeError } from "@/api/errors";
@@ -96,6 +96,8 @@ function UploadInner() {
   const [dragging, setDragging] = useState(false);
   const [drops, setDrops] = useState(0);
   const [freshKeys, setFreshKeys] = useState<ReadonlySet<string>>(() => new Set());
+  // Final analysis status per file (keyed like DraftFile.key), reported by each row's job.
+  const [analysis, setAnalysis] = useState<Record<string, Job["status"]>>({});
 
   const setDraft = useCallback((fn: (d: UploadDraft) => UploadDraft) => {
     setDraftState((d) => {
@@ -219,6 +221,18 @@ function UploadInner() {
   const inFlight = draft.files.some((f) => f.status === "uploaded");
   const canStart = draft.files.length > 0 && draft.title.trim() && draft.category && !busy && missingFiles.length === 0 && draft.files.some((f) => f.status === "pending" || f.status === "failed");
   const started = draft.entryId && draft.files.some((f) => f.status !== "pending");
+  const needsUpload = draft.files.some((f) => f.status === "pending" || f.status === "failed");
+  const analysisSettled = draft.files.length > 0 && draft.files.every((f) => f.status === "uploaded" && analysis[f.key] !== undefined);
+  const analysisOk = draft.files.some((f) => analysis[f.key] === "succeeded");
+  /**
+   * Staging: the step the user is on, derived only from real file and job states.
+   *   choose  → nothing selected yet: the file picker is the main action;
+   *   details → files are ready: "Upload and analyze" is the main action;
+   *   process → uploading/analysing: progress is what to watch, no competing buttons;
+   *   review  → analysis finished: "Review results" is the main action.
+   */
+  const stage: "choose" | "details" | "process" | "review" =
+    draft.files.length === 0 ? "choose" : needsUpload && !busy ? "details" : analysisSettled && analysisOk ? "review" : "process";
 
   return (
     <>
@@ -227,6 +241,7 @@ function UploadInner() {
         subtitle={draft.existingEntry && existing.data ? <>Adding to <Link className="text-brand-700 hover:underline" href={`/vault/${existing.data.id}`}>{existing.data.title}</Link></> : "PDF or photo. Claimly reads it and finds the benefits it describes."}
         back={{ href: draft.existingEntry && targetEntry ? `/vault/${targetEntry}` : "/vault", label: draft.existingEntry ? "Back to entry" : "Vault" }}
       />
+      <UploadSteps stage={stage} />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="flex min-w-0 flex-col gap-5">
           {draft.sample && (
@@ -240,9 +255,14 @@ function UploadInner() {
             </Notice>
           )}
 
-          <Card className="p-4">
+          <Card tone={stage === "choose" || stage === "process" ? "focus" : "default"} className="p-4">
             <div
-              className={clsx("flex flex-col items-center gap-3 rounded-lg border-2 border-dashed px-4 py-8 text-center", dragging ? "border-brand-500 bg-brand-50/40" : "border-line")}
+              className={clsx(
+                "flex rounded-lg border-2 border-dashed text-center",
+                // Once files are chosen the drop zone steps back to a compact row; it still accepts files.
+                draft.files.length ? "flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:text-left" : "flex-col items-center gap-3 px-4 py-8",
+                dragging ? "border-brand-500 bg-brand-50/40" : "border-line",
+              )}
               data-dragging={dragging || undefined}
               onDragEnter={(e) => {
                 e.preventDefault();
@@ -263,10 +283,17 @@ function UploadInner() {
             >
               <span className="drop-icon">
                 {/* Remounting restarts the landing squash on every drop, even rapid ones. */}
-                <UploadCloud key={drops} className={clsx("size-8 text-brand-600", drops > 0 && "squish-drop")} aria-hidden />
+                <UploadCloud key={drops} className={clsx("text-brand-600", draft.files.length ? "size-6" : "size-8", drops > 0 && "squish-drop")} aria-hidden />
               </span>
-              <p className="text-sm">Drag files here or</p>
-              <Button variant="primary" onClick={() => inputRef.current?.click()} disabled={draft.files.length >= UPLOAD_LIMITS.maxFiles && missingFiles.length === 0}>Choose files</Button>
+              <p className={clsx("text-sm", draft.files.length > 0 && "sm:flex-1")}>{draft.files.length ? "Drag more files here or" : "Drag files here or"}</p>
+              <Button
+                variant={stage === "choose" || missingFiles.length > 0 ? "primary" : "secondary"}
+                size={draft.files.length ? "sm" : "md"}
+                onClick={() => inputRef.current?.click()}
+                disabled={draft.files.length >= UPLOAD_LIMITS.maxFiles && missingFiles.length === 0}
+              >
+                {draft.files.length && !missingFiles.length ? "Add files" : "Choose files"}
+              </Button>
               <input
                 ref={inputRef}
                 type="file"
@@ -281,7 +308,7 @@ function UploadInner() {
                   e.target.value = "";
                 }}
               />
-              <p className="text-xs text-muted">
+              <p className={clsx("text-xs text-muted", draft.files.length > 0 && "sm:hidden")}>
                 PDF, JPG or PNG · up to {UPLOAD_LIMITS.maxFileBytes / 1024 / 1024} MB each · up to {UPLOAD_LIMITS.maxFiles} files · up to {UPLOAD_LIMITS.maxPages} pages per document
               </p>
             </div>
@@ -300,7 +327,10 @@ function UploadInner() {
                     fresh={freshKeys.has(f.key)}
                     onRemove={f.status === "pending" || f.status === "failed" ? () => setDraft((d) => ({ ...d, files: d.files.filter((x) => x.key !== f.key) })) : undefined}
                     onRetry={draft.entryId && f.status === "failed" ? () => uploadOne(draft.entryId!, f) : undefined}
-                    onJobDone={onJobDone}
+                    onJobDone={(j) => {
+                      onJobDone(j);
+                      setAnalysis((a) => ({ ...a, [f.key]: j.status }));
+                    }}
                   />
                 ))}
               </ul>
@@ -308,7 +338,7 @@ function UploadInner() {
           </Card>
 
           {!draft.existingEntry && (
-            <Card className="p-4">
+            <Card tone={stage === "choose" ? "quiet" : "default"} className="p-4">
               <h2 className="mb-3 font-semibold">About this document</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Name" htmlFor="u-title">
@@ -333,16 +363,19 @@ function UploadInner() {
           {entryError != null && <ErrorBox error={entryError} onRetry={start} />}
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            {!started || draft.files.some((f) => f.status === "pending" || f.status === "failed") ? (
-              <Button variant="primary" size="lg" disabled={!canStart} loading={busy} onClick={start}>
+            {!started || needsUpload ? (
+              <Button variant={canStart || busy ? "primary" : "secondary"} size="lg" disabled={!canStart} loading={busy} onClick={start}>
                 {draft.entryId && draft.files.some((f) => f.status === "failed") ? "Continue upload" : "Upload and analyze"}
               </Button>
             ) : null}
             {draft.entryId && inFlight && (
               <ButtonLink
                 href={`/review/${draft.entryId}`}
-                variant={draft.files.every((f) => f.status === "uploaded") ? "primary" : "secondary"}
+                variant={stage === "review" ? "primary" : "secondary"}
                 size="lg"
+                // Wait for the success check to pop in first: one pose at a time.
+                cue={stage === "review"}
+                cueDelayMs={360}
               >
                 Review results
               </ButtonLink>
@@ -355,6 +388,7 @@ function UploadInner() {
                   filesRef.current.clear();
                   router.replace("/upload");
                   setDraftState(emptyDraft());
+                  setAnalysis({});
                   setResumed(false);
                 }}
               >
@@ -365,7 +399,7 @@ function UploadInner() {
         </div>
 
         <aside className="flex flex-col gap-3 text-sm text-muted">
-          <Card className="p-4">
+          <Card tone="quiet" className="p-4">
             <h2 className="mb-2 font-semibold text-ink">What happens next</h2>
             <ol className="list-decimal space-y-1.5 pl-5">
               <li>Your file is stored in this demo space.</li>
@@ -374,11 +408,39 @@ function UploadInner() {
             </ol>
           </Card>
           {!draft.files.length && !draft.existingEntry && (
-            <ButtonLink href="/upload?sample=1" icon={<FlaskConical className="size-4" aria-hidden />}>Try a sample document</ButtonLink>
+            <ButtonLink href="/upload?sample=1" variant="ghost" icon={<FlaskConical className="size-4" aria-hidden />}>Try a sample document</ButtonLink>
           )}
         </aside>
       </div>
     </>
+  );
+}
+
+const STEPS = [
+  { key: "pick", label: "Choose files" },
+  { key: "process", label: "Upload and analysis" },
+  { key: "review", label: "Check the results" },
+] as const;
+
+function UploadSteps({ stage }: { stage: "choose" | "details" | "process" | "review" }) {
+  const current = stage === "choose" || stage === "details" ? 0 : stage === "process" ? 1 : 2;
+  return (
+    <ol aria-label="Upload steps" className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+      {STEPS.map((s, i) => (
+        <li key={s.key} aria-current={i === current ? "step" : undefined} className="flex items-center gap-2">
+          <span
+            className={clsx(
+              "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums transition-colors",
+              i < current ? "bg-brand-100 text-brand-700" : i === current ? "bg-brand-600 text-white" : "bg-stone-200/70 text-muted",
+            )}
+          >
+            {i < current ? <><Check className="size-3.5" aria-hidden /><span className="sr-only">Done:</span></> : i + 1}
+          </span>
+          <span className={clsx(i === current ? "font-semibold text-ink" : "text-muted")}>{s.label}</span>
+          {i < STEPS.length - 1 && <span aria-hidden className="mx-1 hidden h-px w-6 bg-line sm:block" />}
+        </li>
+      ))}
+    </ol>
   );
 }
 
