@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { cloneElement, forwardRef, isValidElement, useCallback, useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
-import { AlertCircle, AlertTriangle, ChevronRight, Info, Loader2, MoreHorizontal, X, type LucideIcon } from "lucide-react";
+import { AlertCircle, AlertTriangle, Check, ChevronRight, Info, Loader2, MoreHorizontal, X, type LucideIcon } from "lucide-react";
 import type { Parsed } from "@/lib/format";
 import { describeError } from "@/api/errors";
 import { useStageCue } from "./motion";
@@ -15,10 +15,10 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "subtleDanger";
  * transparent 1px border on the root so the box size matches the unbordered ones exactly.
  */
 const variants: Record<Variant, { root: string; surface: string }> = {
-  primary: { root: "text-white", surface: "inset-0 bg-brand-600 group-hover:bg-brand-700 group-disabled:bg-brand-600/50" },
-  secondary: { root: "border border-transparent text-ink disabled:text-muted", surface: "-inset-px border border-line bg-white group-hover:bg-stone-50" },
-  ghost: { root: "text-ink disabled:text-muted", surface: "inset-0 group-hover:bg-stone-100" },
-  danger: { root: "border border-transparent text-red-700", surface: "-inset-px border border-red-200 bg-white group-hover:bg-red-50" },
+  primary: { root: "text-on-accent", surface: "inset-0 bg-accent group-hover:bg-accent-hover group-disabled:bg-accent/50" },
+  secondary: { root: "border border-transparent text-ink disabled:text-muted", surface: "-inset-px border border-line bg-surface group-hover:bg-subtle" },
+  ghost: { root: "text-ink disabled:text-muted", surface: "inset-0 group-hover:bg-subtle-strong" },
+  danger: { root: "border border-transparent text-red-700", surface: "-inset-px border border-red-200 bg-surface group-hover:bg-red-50" },
   /** A destructive action that must not compete with a dialog's main action. */
   subtleDanger: { root: "text-red-700 disabled:text-red-700/50", surface: "inset-0 group-hover:bg-red-50" },
 };
@@ -96,9 +96,9 @@ export const IconButton = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTM
       className={clsx(
         "squish-icon grid size-11 shrink-0 place-items-center rounded-lg disabled:cursor-not-allowed disabled:opacity-50",
         bleed && "-m-2.5",
-        tone === "muted" && "text-muted hover:bg-stone-100 hover:text-ink",
+        tone === "muted" && "text-muted hover:bg-subtle-strong hover:text-ink",
         tone === "danger" && "text-red-700 hover:bg-red-50",
-        tone === "inherit" && "hover:bg-white/10",
+        tone === "inherit" && "hover:bg-current/10",
         className,
       )}
       {...rest}
@@ -119,20 +119,23 @@ export interface MenuItem {
   onSelect: () => void;
   danger?: boolean;
   disabled?: boolean;
+  /** Set on every item to make the menu a single choice (menuitemradio). */
+  checked?: boolean;
 }
-export function Menu({ label, items, icon = MoreHorizontal }: { label: string; items: MenuItem[]; icon?: LucideIcon }) {
+export function Menu({ label, items, icon = MoreHorizontal, placement = "bottom-end", glyph }: { label: string; items: MenuItem[]; icon?: LucideIcon; placement?: "bottom-end" | "top-start"; glyph?: string }) {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const id = useId();
-  const itemsEls = () => Array.from(list.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
+  const itemsEls = () => Array.from(list.current?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)') ?? []);
   const close = useCallback((refocus = true) => {
     setOpen(false);
     if (refocus) btn.current?.focus();
   }, []);
   useEffect(() => {
     if (!open) return;
-    itemsEls()[0]?.focus();
+    const els = itemsEls();
+    (els.find((el) => el.getAttribute("aria-checked") === "true") ?? els[0])?.focus();
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (!list.current?.contains(t) && !btn.current?.contains(t)) close(false);
@@ -157,6 +160,7 @@ export function Menu({ label, items, icon = MoreHorizontal }: { label: string; i
         ref={btn}
         icon={icon}
         label={label}
+        glyph={glyph}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -172,22 +176,27 @@ export function Menu({ label, items, icon = MoreHorizontal }: { label: string; i
           role="menu"
           aria-label={label}
           onKeyDown={onKey}
-          className="menu-in elev-2 absolute right-0 top-full z-40 mt-1 flex min-w-48 flex-col rounded-xl border border-line bg-white p-1"
+          className={clsx(
+            "menu-in elev-2 absolute z-40 flex min-w-48 flex-col rounded-xl border border-line bg-surface p-1",
+            placement === "bottom-end" ? "right-0 top-full mt-1" : "bottom-full left-0 mb-1 origin-bottom-left",
+          )}
         >
           {items.map((it) => (
             <button
               key={it.label}
               type="button"
-              role="menuitem"
+              role={it.checked === undefined ? "menuitem" : "menuitemradio"}
+              aria-checked={it.checked}
               disabled={it.disabled}
               onClick={() => { close(); it.onSelect(); }}
               className={clsx(
                 "flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-left text-sm disabled:opacity-50",
-                it.danger ? "text-red-700 hover:bg-red-50 focus-visible:bg-red-50" : "text-ink hover:bg-stone-100 focus-visible:bg-stone-100",
+                it.danger ? "text-red-700 hover:bg-red-50 focus-visible:bg-red-50" : "text-ink hover:bg-subtle-strong focus-visible:bg-subtle-strong",
               )}
             >
               {it.icon && <it.icon className="size-4 shrink-0" aria-hidden />}
-              {it.label}
+              <span className="flex-1">{it.label}</span>
+              {it.checked && <Check className="size-4 shrink-0 text-brand-600" aria-hidden />}
             </button>
           ))}
         </div>
@@ -227,9 +236,9 @@ export function parsedField<T>(raw: string, parsed: Parsed<T>, onPick: (display:
  * blocks back (lighter surface, softer border) while keeping their text at full contrast.
  */
 const cardTones = {
-  default: "border-line bg-white",
-  quiet: "border-line/70 bg-white/60",
-  focus: "stage-focus border-brand-200 bg-white",
+  default: "border-line bg-surface",
+  quiet: "border-line/70 bg-surface/60",
+  focus: "stage-focus border-brand-200 bg-surface",
 };
 export type CardTone = keyof typeof cardTones;
 export function Card({ className, children, as: As = "section", tone = "default", cue, ...rest }: { className?: string; children: ReactNode; as?: "section" | "div" | "article" | "li"; tone?: CardTone; cue?: boolean; "aria-labelledby"?: string; "aria-label"?: string }) {
@@ -251,7 +260,7 @@ export function SectionTitle({ title, action, id }: { title: string; action?: Re
 }
 
 const tones = {
-  neutral: "bg-stone-100 text-stone-700",
+  neutral: "bg-subtle-strong text-ink",
   brand: "bg-brand-50 text-brand-700",
   warn: "bg-amber-50 text-amber-800",
   danger: "bg-red-50 text-red-700",
@@ -282,7 +291,7 @@ export function Field({ label, hint, error, children, htmlFor, hideLabel }: { la
     </div>
   );
 }
-const inputCls = "w-full min-w-0 rounded-lg border border-line bg-white px-3 py-2 text-sm placeholder:text-stone-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:bg-stone-50";
+const inputCls = "w-full min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm placeholder:text-placeholder focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:bg-subtle";
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...p }, ref) {
   return <input ref={ref} className={clsx(inputCls, "h-10", className)} {...p} />;
 });
@@ -301,7 +310,7 @@ export function Spinner({ label = "Loading" }: { label?: string }) {
   );
 }
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={clsx("animate-pulse rounded-lg bg-stone-200/70", className)} aria-hidden />;
+  return <div className={clsx("animate-pulse rounded-lg bg-track", className)} aria-hidden />;
 }
 export function ListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
@@ -313,7 +322,7 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 
 export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; title: string; body?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-line bg-white px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-line bg-surface px-6 py-10 text-center">
       {icon && <div className="text-brand-600">{icon}</div>}
       <p className="font-medium">{title}</p>
       {body && <div className="max-w-md text-sm text-muted">{body}</div>}
@@ -407,7 +416,7 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
           primary.click();
         }
       }}
-      className={clsx("elev-3 m-auto max-h-[90dvh] w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-line bg-white p-0 text-ink", wide ? "max-w-3xl" : "max-w-lg")}
+      className={clsx("elev-3 m-auto max-h-[90dvh] w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-line bg-surface p-0 text-ink", wide ? "max-w-3xl" : "max-w-lg")}
     >
       {open && (
         <div className="dialog-in flex max-h-[90dvh] flex-col">
@@ -447,7 +456,7 @@ export function PageHeader({ title, subtitle, actions, back }: { title: ReactNod
 
 export function Details({ summary, children, defaultOpen }: { summary: ReactNode; children: ReactNode; defaultOpen?: boolean }) {
   return (
-    <details className="group rounded-lg border border-line bg-stone-50/60 px-3 py-2" open={defaultOpen}>
+    <details className="group rounded-lg border border-line bg-subtle/60 px-3 py-2" open={defaultOpen}>
       <summary className="details-summary cursor-pointer select-none text-sm font-medium text-ink">
         <ChevronRight className="details-chevron -ml-0.5 mr-1 inline-block size-4 align-[-3px] text-muted" aria-hidden />
         {summary}

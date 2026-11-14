@@ -74,7 +74,7 @@ function nextActions(d: Dashboard) {
 
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="min-w-0 rounded-lg bg-stone-100/60 px-3 py-2.5">
+    <div className="min-w-0 rounded-lg bg-subtle-strong/60 px-3 py-2.5">
       <dt className="text-xs text-muted">{label}</dt>
       <dd className="text-xl font-semibold tabular-nums">{value}</dd>
       {hint && <dd className="text-[11px] leading-tight text-muted">{hint}</dd>}
@@ -113,7 +113,7 @@ function DashboardBody({ d }: { d: Dashboard }) {
               {d.next_benefits.slice(0, 4).map((b) => <BenefitCard key={b.id} b={b} compact />)}
             </div>
           ) : (
-            <p className="rounded-xl border border-dashed border-line bg-white p-4 text-sm text-muted">No open benefits found yet.</p>
+            <p className="rounded-xl border border-dashed border-line bg-surface p-4 text-sm text-muted">No open benefits found yet.</p>
           )}
         </section>
       </div>

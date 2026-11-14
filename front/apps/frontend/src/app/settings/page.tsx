@@ -8,6 +8,7 @@ import { readSession, startNewDemo } from "@/api/session";
 import type { Profile, ReminderOffset } from "@/api/types";
 import { CONTRACT_VERSION } from "@/api/types";
 import { OffsetPicker, timeZones } from "@/components/Reminders";
+import { ThemeSetting } from "@/components/ThemeToggle";
 import { useToast } from "@/components/Toast";
 import { Badge, Button, Card, ErrorBox, Field, Input, ListSkeleton, Modal, Notice, PageHeader, SectionTitle, Select } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -17,12 +18,16 @@ export default function SettingsPage() {
   const profile = useProfile();
   return (
     <>
-      <PageHeader title="Settings" subtitle="Notifications and this demo space. No account needed." />
+      <PageHeader title="Settings" subtitle="Appearance, notifications and this demo space. No account needed." />
       <div className="grid gap-5 lg:grid-cols-2">
         {profile.error && <ErrorBox error={profile.error} onRetry={() => profile.refetch()} />}
         {profile.isLoading && <ListSkeleton rows={2} />}
         {profile.data && <NotificationSettings p={profile.data} />}
         <div className="flex flex-col gap-5">
+          <Card className="p-4">
+            <SectionTitle title="Appearance" />
+            <ThemeSetting />
+          </Card>
           <DemoSpace />
           {API_MODE === "mock" && <MockControls />}
           <About />

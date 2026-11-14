@@ -37,7 +37,7 @@ function CasesInner() {
       <div role="tablist" aria-label="Stage" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         {(["", ...CASE_STATUSES] as const).map((s) => (
           <button key={s || "all"} role="tab" aria-selected={status === s} type="button" onClick={() => setStatus(s)}
-            className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", status === s ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink")}>
+            className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", status === s ? "bg-inverse text-on-inverse" : "bg-surface text-muted ring-1 ring-line hover:text-ink")}>
             {s ? CASE_STATUS_LABEL[s] : "All"}
           </button>
         ))}
@@ -123,7 +123,7 @@ function NewCaseModal({ onClose }: { onClose: () => void }) {
           {entries.data?.length ? (
             <div className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-line p-2">
               {entries.data.map((e) => (
-                <label key={e.id} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-stone-50">
+                <label key={e.id} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-subtle">
                   <input type="checkbox" checked={f.entryIds.includes(e.id)} onChange={(ev) => setF({ ...f, entryIds: ev.target.checked ? [...f.entryIds, e.id] : f.entryIds.filter((x) => x !== e.id), benefitId: "" })} />
                   <span className="min-w-0 flex-1 truncate">{e.title}</span>
                   <span className="text-xs text-muted">{CATEGORY_LABEL[e.category]}</span>

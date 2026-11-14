@@ -353,7 +353,7 @@ export function ReplyAnalysisView({ e }: { e: CaseEvent }) {
   const a = e.reply_analysis;
   if (!a) return null;
   return (
-    <div className="mt-2 flex flex-col gap-2 rounded-lg bg-stone-50 p-3 text-sm">
+    <div className="mt-2 flex flex-col gap-2 rounded-lg bg-subtle p-3 text-sm">
       <p className="font-medium">{a.company_position}</p>
       <p>{a.summary}</p>
       <p className="text-muted">{a.comparison}</p>
@@ -502,7 +502,7 @@ export function Timeline({ c }: { c: Case }) {
         <ol className="relative flex flex-col gap-4 border-l border-line pl-4">
           {[...events.data].reverse().map((e) => (
             <li key={e.id} className="relative">
-              <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full border-2 border-white bg-brand-500" aria-hidden />
+              <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full border-2 border-surface bg-brand-500" aria-hidden />
               <p className="text-xs text-muted">{formatDateTime(e.event_date)} · {EVENT_LABEL[e.type]}{e.new_status ? `: ${CASE_STATUS_LABEL[e.new_status]}` : ""}</p>
               {e.note && <p className="whitespace-pre-line break-words text-sm">{e.note}</p>}
               <ReplyAnalysisView e={e} />

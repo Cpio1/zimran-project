@@ -7,6 +7,7 @@ import { Archive, CalendarDays, FolderKanban, Gift, Home, MessageCircle, Setting
 import type { ReactNode } from "react";
 import { API_MODE } from "@/api/config";
 import { ButtonLink } from "./ui";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV = [
   { href: "/", label: "Home", icon: Home },
@@ -37,12 +38,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? "/";
   return (
     <div className="min-h-dvh">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:shadow">Skip to content</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:shadow">Skip to content</a>
 
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-line bg-white px-3 py-5 md:flex">
+      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-line bg-surface px-3 py-5 md:flex">
         <Link href="/" className="mb-1 flex items-center gap-2 px-2 text-lg font-semibold tracking-tight">
-          <span className="grid size-7 place-items-center rounded-lg bg-brand-600 text-sm text-white" aria-hidden>C</span>
+          <span className="grid size-7 place-items-center rounded-lg bg-accent text-sm text-on-accent" aria-hidden>C</span>
           Claimly
         </Link>
         <SampleModeBadge className="mx-2 mb-4 self-start" />
@@ -62,26 +63,30 @@ export function AppShell({ children }: { children: ReactNode }) {
               className={clsx(
                 "flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
                 i === NAV.length && "mt-4",
-                isActive(path, href) ? "bg-brand-50 font-medium text-brand-700" : "text-muted hover:bg-stone-100 hover:text-ink",
+                isActive(path, href) ? "bg-brand-50 font-medium text-brand-700" : "text-muted hover:bg-subtle-strong hover:text-ink",
               )}
             >
               <Icon className="size-4" aria-hidden /> {label}
             </Link>
           ))}
         </nav>
-        <p className="mt-auto px-2 text-xs text-muted">Demo space · no account needed</p>
+        <div className="mt-auto flex items-center justify-between gap-2 pl-2">
+          <p className="text-xs text-muted">Demo space · no account needed</p>
+          <ThemeToggle placement="top-start" />
+        </div>
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-line bg-white px-4 md:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-line bg-surface px-4 md:hidden">
         <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="grid size-7 place-items-center rounded-lg bg-brand-600 text-sm text-white" aria-hidden>C</span>
+          <span className="grid size-7 place-items-center rounded-lg bg-accent text-sm text-on-accent" aria-hidden>C</span>
           Claimly
         </Link>
         <div className="flex items-center gap-1">
           <SampleModeBadge />
+          <ThemeToggle />
           {SECONDARY.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} aria-label={label} title={label} aria-current={isActive(path, href) ? "page" : undefined} className={clsx("grid size-11 place-items-center rounded-lg transition-colors", isActive(path, href) ? "bg-brand-50 text-brand-700" : "text-muted hover:bg-stone-100")}>
+            <Link key={href} href={href} aria-label={label} title={label} aria-current={isActive(path, href) ? "page" : undefined} className={clsx("grid size-11 place-items-center rounded-lg transition-colors", isActive(path, href) ? "bg-brand-50 text-brand-700" : "text-muted hover:bg-subtle-strong")}>
               <Icon className="size-5" aria-hidden />
             </Link>
           ))}
@@ -93,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav aria-label="Main" className="elev-2-up fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav aria-label="Main" className="elev-2-up fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}

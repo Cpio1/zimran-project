@@ -31,7 +31,7 @@ export function OffsetPicker({ value, onChange, legend = "Remind me" }: { value:
           const on = value.includes(o);
           return (
             <button key={o} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== o) : [...value, o].sort((a, b) => b - a))}
-              className={clsx("rounded-full px-3 py-1.5 text-xs font-medium", on ? "bg-brand-600 text-white" : "bg-stone-100 text-muted hover:text-ink")}>
+              className={clsx("rounded-full px-3 py-1.5 text-xs font-medium", on ? "bg-accent text-on-accent" : "bg-subtle-strong text-muted hover:text-ink")}>
               {offsetLabel(o)}
             </button>
           );

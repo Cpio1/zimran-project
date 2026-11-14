@@ -44,7 +44,7 @@ function BenefitsInner() {
         <div role="tablist" aria-label="Filter" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
           {FILTERS.map((x) => (
             <button key={x.id} role="tab" aria-selected={filter === x.id} type="button" onClick={() => setFilter(x.id)}
-              className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", filter === x.id ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink")}>
+              className={clsx("hit-y shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors", filter === x.id ? "bg-inverse text-on-inverse" : "bg-surface text-muted ring-1 ring-line hover:text-ink")}>
               {x.label}
               {list.data && <span className="ml-1.5 tabular-nums opacity-70">{list.data.filter(x.test).length}</span>}
             </button>

@@ -24,7 +24,7 @@ export function UsageMeter({ b }: { b: Benefit }) {
       {known && (
         <div className="flex gap-1" aria-hidden>
           {Array.from({ length: Math.min(b.units_total!, 12) }, (_, i) => (
-            <span key={i} className={clsx("h-1.5 flex-1 rounded-full", i < b.used_units! ? "bg-stone-300" : "bg-brand-500")} />
+            <span key={i} className={clsx("h-1.5 flex-1 rounded-full", i < b.used_units! ? "bg-track-strong" : "bg-brand-500")} />
           ))}
         </div>
       )}
@@ -34,7 +34,7 @@ export function UsageMeter({ b }: { b: Benefit }) {
 
 export function UsageNumbers({ b }: { b: Benefit }) {
   const cell = (label: string, v: number | null, hint?: string) => (
-    <div className="min-w-0 rounded-lg bg-stone-50 px-3 py-2">
+    <div className="min-w-0 rounded-lg bg-subtle px-3 py-2">
       <dt className="text-xs text-muted">{label}</dt>
       <dd className="text-lg font-semibold tabular-nums">{v === null ? <span className="block text-sm font-normal leading-snug text-muted [overflow-wrap:anywhere]">{hint ?? "Not known"}</span> : v}</dd>
     </div>

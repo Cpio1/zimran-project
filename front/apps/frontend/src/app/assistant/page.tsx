@@ -63,7 +63,7 @@ function AssistantInner() {
                 <p className="mb-1 mt-3 px-3 text-xs font-medium uppercase tracking-wide text-muted">{t.scope === "entry" ? "Documents" : "Cases"}</p>
               )}
               <button type="button" onClick={() => pick(t.id)} aria-current={current?.id === t.id ? "page" : undefined}
-                className={clsx("flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm", current?.id === t.id ? "bg-brand-50 font-medium text-brand-700" : "text-muted hover:bg-stone-100 hover:text-ink")}>
+                className={clsx("flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm", current?.id === t.id ? "bg-brand-50 font-medium text-brand-700" : "text-muted hover:bg-subtle-strong hover:text-ink")}>
                 <Icon t={t} /> <span className="truncate">{name(t)}</span>
               </button>
             </div>

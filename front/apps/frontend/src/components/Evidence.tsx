@@ -82,10 +82,11 @@ function EvidenceViewer({ evidence }: { evidence: EvidenceRef }) {
       ) : !url ? (
         <Spinner label="Loading document" />
       ) : doc.data?.mime_type === "application/pdf" ? (
-        <iframe title={`${doc.data.name}, page ${evidence.page}`} src={`${url}#page=${evidence.page}`} className="h-[60dvh] w-full rounded-lg border border-line" />
+        // Documents keep their own colours in both themes.
+        <iframe title={`${doc.data.name}, page ${evidence.page}`} src={`${url}#page=${evidence.page}`} style={{ colorScheme: "light" }} className="h-[60dvh] w-full rounded-lg border border-line bg-white" />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={`${doc.data?.name ?? "Document"} (photo)`} className="max-h-[60dvh] w-full rounded-lg border border-line object-contain" />
+        <img src={url} alt={`${doc.data?.name ?? "Document"} (photo)`} className="max-h-[60dvh] w-full rounded-lg border border-line bg-white object-contain" />
       )}
     </div>
   );
@@ -98,7 +99,7 @@ export function EvidenceChips({ refs, max = 3 }: { refs: EvidenceRef[]; max?: nu
     <ul className="flex flex-col gap-1.5">
       {refs.slice(0, max).map((r, i) => (
         <li key={`${r.document_id}-${r.page}-${i}`}>
-          <button type="button" onClick={() => open(r)} className="flex w-full items-start gap-2 rounded-lg border border-line bg-white px-2.5 py-2 text-left text-xs text-muted hover:border-brand-200 hover:bg-brand-50/50">
+          <button type="button" onClick={() => open(r)} className="flex w-full items-start gap-2 rounded-lg border border-line bg-surface px-2.5 py-2 text-left text-xs text-muted hover:border-brand-200 hover:bg-brand-50/50">
             <FileText className="mt-0.5 size-3.5 shrink-0 text-brand-600" aria-hidden />
             <span className="min-w-0">
               <span className="line-clamp-2 text-ink">“{r.quote}”</span>

@@ -432,7 +432,7 @@ function UploadSteps({ stage }: { stage: "choose" | "details" | "process" | "rev
           <span
             className={clsx(
               "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums transition-colors",
-              i < current ? "bg-brand-100 text-brand-700" : i === current ? "bg-brand-600 text-white" : "bg-stone-200/70 text-muted",
+              i < current ? "bg-brand-100 text-brand-700" : i === current ? "bg-accent text-on-accent" : "bg-track text-muted",
             )}
           >
             {i < current ? <><Check className="size-3.5" aria-hidden /><span className="sr-only">Done:</span></> : i + 1}

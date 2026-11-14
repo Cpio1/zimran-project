@@ -43,16 +43,16 @@ export default function CalendarPage() {
     <>
       <PageHeader title="Calendar" subtitle={`Dates from your documents and your reminders · ${profile.data?.timezone ?? ""}`} actions={<Link href="/settings" className="text-sm text-brand-700 hover:underline">Notification settings</Link>} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div role="tablist" aria-label="View" className="flex gap-1 rounded-lg bg-stone-100 p-1">
+        <div role="tablist" aria-label="View" className="flex gap-1 rounded-lg bg-subtle-strong p-1">
           {(["agenda", "notifications"] as const).map((t) => (
-            <button key={t} role="tab" aria-selected={tab === t} type="button" onClick={() => setTab(t)} className={clsx("rounded-md px-3 py-1.5 text-sm", tab === t ? "bg-white font-medium shadow-sm" : "text-muted")}>{t === "agenda" ? "Agenda" : "Notifications"}</button>
+            <button key={t} role="tab" aria-selected={tab === t} type="button" onClick={() => setTab(t)} className={clsx("rounded-md px-3 py-1.5 text-sm", tab === t ? "bg-surface font-medium shadow-sm" : "text-muted")}>{t === "agenda" ? "Agenda" : "Notifications"}</button>
           ))}
         </div>
         {tab === "agenda" && (
           <>
-            <div role="tablist" aria-label="Range" className="flex gap-1 rounded-lg bg-stone-100 p-1">
+            <div role="tablist" aria-label="Range" className="flex gap-1 rounded-lg bg-subtle-strong p-1">
               {(["week", "month"] as const).map((r) => (
-                <button key={r} role="tab" aria-selected={range === r} type="button" onClick={() => setRange(r)} className={clsx("rounded-md px-3 py-1.5 text-sm", range === r ? "bg-white font-medium shadow-sm" : "text-muted")}>{r === "week" ? "This week" : "Next 30 days"}</button>
+                <button key={r} role="tab" aria-selected={range === r} type="button" onClick={() => setRange(r)} className={clsx("rounded-md px-3 py-1.5 text-sm", range === r ? "bg-surface font-medium shadow-sm" : "text-muted")}>{r === "week" ? "This week" : "Next 30 days"}</button>
               ))}
             </div>
             <Select aria-label="Filter by entry" value={entryFilter} onChange={(e) => setEntryFilter(e.target.value)} className="sm:ml-auto sm:w-56">
@@ -85,7 +85,7 @@ export default function CalendarPage() {
                         <Badge>{r.origin === "document" ? "From document" : r.origin === "user" ? "Yours" : "Suggested"}</Badge>
                         {r.benefit_id && <Link href={`/benefits/${r.benefit_id}`} className="text-sm text-brand-700 hover:underline">Benefit</Link>}
                         {r.case_id && <Link href={`/cases/${r.case_id}`} className="text-sm text-brand-700 hover:underline">Case</Link>}
-                        <button type="button" onClick={() => setEdit(r)} className="rounded-md px-2 py-1 text-sm hover:bg-stone-100">Edit</button>
+                        <button type="button" onClick={() => setEdit(r)} className="rounded-md px-2 py-1 text-sm hover:bg-subtle-strong">Edit</button>
                       </div>
                     </Card>
                   ))}

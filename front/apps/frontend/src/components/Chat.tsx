@@ -111,7 +111,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
             {thread.scope === "vault" && (
               <div className="flex flex-wrap gap-2">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s.text} type="button" onClick={() => submit(s.text, s.purpose)} className="hit-y rounded-full border border-line bg-white px-3 py-2 text-left text-sm hover:border-brand-200 hover:bg-brand-50">
+                  <button key={s.text} type="button" onClick={() => submit(s.text, s.purpose)} className="hit-y rounded-full border border-line bg-surface px-3 py-2 text-left text-sm hover:border-brand-200 hover:bg-brand-50">
                     {s.text}
                   </button>
                 ))}
@@ -135,7 +135,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
       </div>
 
       <form
-        className="sticky bottom-0 flex flex-col gap-2 border-t border-line bg-white pt-3"
+        className="sticky bottom-0 flex flex-col gap-2 border-t border-line bg-surface pt-3"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -152,7 +152,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
               role="radio"
               aria-checked={purpose === v}
               onClick={() => setPurpose(v)}
-              className={clsx("hit-y rounded-full px-3 py-1.5 text-xs font-medium transition-colors", purpose === v ? "bg-brand-600 text-white" : "bg-stone-100 text-muted hover:text-ink")}
+              className={clsx("hit-y rounded-full px-3 py-1.5 text-xs font-medium transition-colors", purpose === v ? "bg-accent text-on-accent" : "bg-subtle-strong text-muted hover:text-ink")}
             >
               {label}
             </button>
@@ -188,7 +188,7 @@ export function Chat({ thread, className, placeholder }: { thread: Thread; class
 function UserBubble({ text, pending }: { text: string; pending?: boolean }) {
   return (
     <div className="flex flex-col items-end">
-      <p className={clsx("max-w-[85%] whitespace-pre-line break-words rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-sm text-white", pending && "opacity-70")}>
+      <p className={clsx("max-w-[85%] whitespace-pre-line break-words rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-sm text-on-accent", pending && "opacity-70")}>
         {text}
       </p>
       {/* Doherty: the bubble shows at once; if the server takes a moment, say so. */}
@@ -237,7 +237,7 @@ function AssistantMessage({ m, thread, onAsk }: { m: ChatMessage; thread: Thread
   return (
     <div className="flex gap-2">
       <Bot className="mt-1 size-5 shrink-0 text-brand-600" aria-hidden />
-      <div className="flex min-w-0 max-w-2xl flex-1 flex-col gap-3 rounded-2xl rounded-tl-md border border-line bg-white px-3.5 py-3">
+      <div className="flex min-w-0 max-w-2xl flex-1 flex-col gap-3 rounded-2xl rounded-tl-md border border-line bg-surface px-3.5 py-3">
         <p className="whitespace-pre-line break-words text-sm">{m.content}</p>
         {benefits.length > 0 && (
           <ul className="flex flex-col gap-1.5" aria-label="Matching benefits">
@@ -265,9 +265,9 @@ function AssistantMessage({ m, thread, onAsk }: { m: ChatMessage; thread: Thread
           <div className="flex flex-wrap gap-2">
             {actions.map((a, i) =>
               a.href ? (
-                <Link key={i} href={a.href} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-stone-50">{a.icon}{a.label}</Link>
+                <Link key={i} href={a.href} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-subtle">{a.icon}{a.label}</Link>
               ) : (
-                <button key={i} type="button" onClick={() => onAsk(a.label)} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-stone-50">{a.icon}{a.label}</button>
+                <button key={i} type="button" onClick={() => onAsk(a.label)} className="hit-y inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-sm hover:bg-subtle">{a.icon}{a.label}</button>
               ),
             )}
           </div>

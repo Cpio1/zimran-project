@@ -15,7 +15,7 @@ export function ProgressBar({ value, label }: { value: number | null; label: str
       aria-valuemin={value === null ? undefined : 0}
       aria-valuemax={value === null ? undefined : 100}
       aria-valuenow={value ?? undefined}
-      className="relative h-1.5 w-full overflow-hidden rounded-full bg-stone-200"
+      className="relative h-1.5 w-full overflow-hidden rounded-full bg-track"
     >
       {value === null ? (
         <div className="animate-indeterminate absolute inset-y-0 left-0 w-2/5 rounded-full bg-brand-500" />
