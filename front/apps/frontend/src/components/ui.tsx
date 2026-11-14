@@ -232,6 +232,81 @@ export function parsedField<T>(raw: string, parsed: Parsed<T>, onPick: (display:
 }
 
 /**
+ * Filters that narrow one list (Jakob): a group of toggle buttons with aria-pressed — not tabs,
+ * because nothing is swapped in. Each button is a normal Tab stop, as the platform expects.
+ * `look="pills"` for a scrollable row, `look="segmented"` for a compact switch. 44 px on touch.
+ */
+export function FilterButtons<T extends string>({ label, options, value, onChange, look = "pills", className }: { label: string; options: { value: T; label: ReactNode; count?: number }[]; value: T; onChange: (v: T) => void; look?: "pills" | "segmented"; className?: string }) {
+  return (
+    <div role="group" aria-label={label} className={clsx(look === "pills" ? "flex gap-1.5" : "flex gap-1 rounded-lg bg-subtle-strong p-1", className)}>
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(o.value)}
+            className={clsx(
+              "shrink-0 text-sm transition-colors [@media(pointer:coarse)]:min-h-11",
+              look === "pills" ? "hit-y rounded-full px-3 py-1.5" : "rounded-md px-3 py-1.5",
+              look === "pills" && (on ? "bg-inverse text-on-inverse" : "bg-surface text-muted ring-1 ring-line hover:text-ink"),
+              look === "segmented" && (on ? "elev-1 bg-surface font-medium text-ink" : "text-muted hover:text-ink"),
+            )}
+          >
+            {o.label}
+            {o.count !== undefined && <span className="ml-1.5 tabular-nums opacity-70">{o.count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Real tabs (Jakob / WAI-ARIA tabs pattern): only the selected tab is in the Tab order (roving
+ * tabindex); ←/→ move and select, Home/End jump; each tab controls a tabpanel (tabPanelProps).
+ */
+export function Tabs<T extends string>({ id, label, tabs, value, onChange }: { id: string; label: string; tabs: { value: T; label: ReactNode }[]; value: T; onChange: (v: T) => void }) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const move = (i: number) => {
+    const n = (i + tabs.length) % tabs.length;
+    onChange(tabs[n].value);
+    refs.current[n]?.focus();
+  };
+  return (
+    <div role="tablist" aria-label={label} className="flex gap-1 rounded-lg bg-subtle-strong p-1">
+      {tabs.map((t, i) => {
+        const on = t.value === value;
+        return (
+          <button
+            key={t.value}
+            ref={(el) => { refs.current[i] = el; }}
+            type="button"
+            role="tab"
+            id={`${id}-tab-${t.value}`}
+            aria-selected={on}
+            aria-controls={`${id}-panel-${t.value}`}
+            tabIndex={on ? 0 : -1}
+            onClick={() => onChange(t.value)}
+            onKeyDown={(e) => {
+              const k = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+              if (k === undefined) return;
+              e.preventDefault();
+              move(k);
+            }}
+            className={clsx("rounded-md px-3 py-1.5 text-sm transition-colors [@media(pointer:coarse)]:min-h-11", on ? "elev-1 bg-surface font-medium text-ink" : "text-muted hover:text-ink")}
+          >
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+export const tabPanelProps = (id: string, value: string) => ({ role: "tabpanel", id: `${id}-panel-${value}`, "aria-labelledby": `${id}-tab-${value}`, tabIndex: 0 });
+
+/**
  * Staging tones. `focus` marks the one block the current step is about, `quiet` steps supporting
  * blocks back (lighter surface, softer border) while keeping their text at full contrast.
  */
@@ -241,10 +316,10 @@ const cardTones = {
   focus: "stage-focus border-brand-200 bg-surface",
 };
 export type CardTone = keyof typeof cardTones;
-export function Card({ className, children, as: As = "section", tone = "default", cue, ...rest }: { className?: string; children: ReactNode; as?: "section" | "div" | "article" | "li"; tone?: CardTone; cue?: boolean; "aria-labelledby"?: string; "aria-label"?: string }) {
-  const playCue = useStageCue(!!cue && tone === "focus");
+/** The attention cue lives on the next action's button, never on its card: one movement per context. */
+export function Card({ className, children, as: As = "section", tone = "default", ...rest }: { className?: string; children: ReactNode; as?: "section" | "div" | "article" | "li"; tone?: CardTone; "aria-labelledby"?: string; "aria-label"?: string; id?: string; role?: string; tabIndex?: number }) {
   return (
-    <As data-tone={tone} data-stage-cue={playCue || undefined} className={clsx("rounded-xl border", cardTones[tone], className)} {...rest}>
+    <As data-tone={tone} className={clsx("rounded-xl border", cardTones[tone], className)} {...rest}>
       {children}
     </As>
   );
@@ -298,8 +373,13 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea({ className, ...p }, ref) {
   return <textarea ref={ref} className={clsx(inputCls, className)} {...p} />;
 });
+/**
+ * Native <select> (keeps its semantics, keyboard and the OS picker). The native look is dropped
+ * (`.select-native`) because WebKit ignores height/min-height on it; the chevron is drawn in CSS.
+ * 40 px with a mouse, 44 px on touch screens.
+ */
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select({ className, ...p }, ref) {
-  return <select ref={ref} className={clsx(inputCls, "h-10", className)} {...p} />;
+  return <select ref={ref} className={clsx(inputCls, "select-native h-10 pr-9", className)} {...p} />;
 });
 
 export function Spinner({ label = "Loading" }: { label?: string }) {
@@ -442,7 +522,7 @@ export function PageHeader({ title, subtitle, actions, back }: { title: ReactNod
     <header className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {back && (
-          <Link href={back.href} data-squish="" className="mb-1 inline-block text-sm text-muted hover:text-ink">
+          <Link href={back.href} data-squish="" className="hit-y mb-1 inline-block text-sm text-muted hover:text-ink">
             <span data-anticipate="left" aria-hidden>←</span> {back.label}
           </Link>
         )}
@@ -456,12 +536,13 @@ export function PageHeader({ title, subtitle, actions, back }: { title: ReactNod
 
 export function Details({ summary, children, defaultOpen }: { summary: ReactNode; children: ReactNode; defaultOpen?: boolean }) {
   return (
-    <details className="group rounded-lg border border-line bg-subtle/60 px-3 py-2" open={defaultOpen}>
-      <summary className="details-summary cursor-pointer select-none text-sm font-medium text-ink">
-        <ChevronRight className="details-chevron -ml-0.5 mr-1 inline-block size-4 align-[-3px] text-muted" aria-hidden />
+    // The padding lives on <summary>, so the whole 44 px row toggles (not just the 20 px text line).
+    <details className="group rounded-lg border border-line bg-subtle/60" open={defaultOpen}>
+      <summary className="details-summary flex min-h-11 cursor-pointer select-none items-center rounded-lg px-3 text-sm font-medium text-ink">
+        <ChevronRight className="details-chevron -ml-0.5 mr-1 size-4 shrink-0 text-muted" aria-hidden />
         {summary}
       </summary>
-      <div className="mt-2 text-sm">{children}</div>
+      <div className="px-3 pb-3 text-sm">{children}</div>
     </details>
   );
 }
