@@ -1,7 +1,9 @@
 # Claimly backend
 
 Minimal Python/FastAPI backend implementing `GET /health` for Claimly API
-contract version **2.0.0**. It does not require external services or secrets.
+contract version **2.0.0**, plus a Supabase PostgreSQL foundation. Health does
+not require external services or secrets; database operations require explicit
+server configuration. Upload and AI analysis are not implemented yet.
 
 ## Install on Windows PowerShell
 
@@ -95,3 +97,89 @@ only; no frontend or contract files are modified.
 - `pytest.ini`: tells pytest where to find tests.
 - `.gitignore`: excludes the local environment, Python caches, and local secrets.
 - `README.md`: setup, run, and verification instructions.
+
+## Configure Supabase for Phase 3A
+
+From `services/backend`, create your ignored local configuration file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env` locally. Do not paste real credentials into source files or frontend
+configuration. Existing hosting environment variables override `.env` values.
+
+| Variable | What to set |
+| --- | --- |
+| `DATABASE_URL` | Required for database operations. PostgreSQL connection URI from your project's **Connect** dialog, including its database password. |
+| `DEMO_WORKSPACE_ID` | Keep `10000000-0000-4000-8000-000000000000`; it matches the migrated shared workspace. Any other ID fails validation. |
+| `DATABASE_CONNECT_TIMEOUT_SECONDS` | Optional; defaults to `10`, accepts `1` through `60`. |
+
+Use the direct connection if your machine has the required network connectivity,
+or the **session pooler** connection for an IPv4 Windows development setup. Copy
+the exact host, port, username, and database from Supabase rather than guessing.
+For URI passwords containing reserved characters, use percent encoding.
+See [Supabase's connection guide](https://supabase.com/docs/guides/database/connecting-to-postgres).
+
+The module uses Psycopg 3, requires TLS (`sslmode=require`), sets a connection
+timeout, and disables prepared statements for pooler compatibility. The connection
+context commits on success, rolls back on errors, and closes on exit. It is
+synchronous and intended for sync handlers or workers. There is no startup
+connection, fallback database, mock data, automatic migration, or connection pool.
+
+The SQL connection password is different from a Supabase service-role API key.
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not needed in this phase:
+there is no Storage client yet. Never put database credentials or service-role
+keys in `NEXT_PUBLIC_*` variables. No Supabase Auth setup is needed.
+
+Missing/invalid database settings raise `ConfigurationError` when settings are
+requested; a failed connection raises `DatabaseConnectionError` with a sanitized
+message. Database configuration does not change `/health`, which remains a
+process-liveness endpoint rather than a database-readiness probe.
+
+## Apply migrations later
+
+Migrations are not applied automatically. For a fresh project, use SQL Editor to run
+`migrations/0001_database_foundation.sql` followed by
+`migrations/0002_shared_workspace.sql` as the database owner. See
+[migrations/README.md](migrations/README.md) for the full procedure, tables,
+sample lifecycle, access controls, and verification queries.
+
+New Phase 3A files:
+
+- `.env.example`: credential-free configuration template.
+- `app/config.py`: validates server settings and loads the backend's `.env`.
+- `app/database.py`: opens a transactional PostgreSQL connection on explicit use.
+- `migrations/0001_database_foundation.sql`: six tables, constraints, indexes,
+  timestamp triggers, and access controls.
+- `migrations/0002_shared_workspace.sql`: inserts only the shared workspace.
+- `migrations/README.md`: migration procedure and schema details.
+- `tests/test_database.py`: offline settings and mocked connection tests.
+- `tests/test_migrations.py`: PostgreSQL syntax and basic access-boundary checks.
+
+Run the same install and pytest commands above to include all Phase 3A tests.
+Tests do not need Supabase credentials or network access. They do not execute SQL
+against a database; live migration and permission checks are still outstanding.
+
+## Check an existing database connection
+
+After applying the migrations and configuring `.env`, run this explicitly from
+`services/backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.check_database
+```
+
+The check uses the existing configuration and connection module, starts a
+read-only transaction, and executes `SELECT id, name FROM claimly.workspaces`.
+It reports whether the configured shared workspace exists without printing
+credentials or raw driver errors. Exit codes: `0` = connected and found,
+`1` = configuration/connection/query failure, `2` = query succeeded but workspace
+missing. It does not apply migrations or change records. This command is separate
+from the offline test suite and `/health`.
+
+If the check reports an invalid port, replace the local URI with the exact
+PostgreSQL URI from the project's Connect dialog, filling in only the database
+password (percent-encoded if needed). The port must be numeric, between 1 and
+65535. Use the session pooler URI for an IPv4-only development network. Do not
+share `.env` or paste the URI into logs or chat.
