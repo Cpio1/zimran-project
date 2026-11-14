@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+.next/
+graphify-out/
+.vercel/
+.env*
+!.env.example
+claimly-project-fixed/
