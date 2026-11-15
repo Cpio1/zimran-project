@@ -1,9 +1,14 @@
 # Claimly backend
 
-Minimal Python/FastAPI backend implementing `GET /health` for Claimly API
-contract version **2.0.0**, plus a Supabase PostgreSQL foundation. Health does
-not require external services or secrets; database operations require explicit
-server configuration. Upload and AI analysis are not implemented yet.
+Python/FastAPI backend with health, shared-workspace entry creation, private
+document upload, document metadata, and queued-job status. Public response shapes
+follow Claimly contract **2.0.0**; its session requirement conflicts with the
+approved shared-workspace design (see [UPLOADS.md](UPLOADS.md)). Health does not
+require configuration. Data endpoints require real PostgreSQL and Storage settings.
+AI analysis is not implemented: accepted jobs remain queued with no fabricated result.
+
+See [UPLOADS.md](UPLOADS.md) for migration 0003, safe testing commands, safeguards,
+failure recovery, and remaining frontend work.
 
 ## Install on Windows PowerShell
 
@@ -127,10 +132,11 @@ context commits on success, rolls back on errors, and closes on exit. It is
 synchronous and intended for sync handlers or workers. There is no startup
 connection, fallback database, mock data, automatic migration, or connection pool.
 
-The SQL connection password is different from a Supabase service-role API key.
-`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not needed in this phase:
-there is no Storage client yet. Never put database credentials or service-role
-keys in `NEXT_PUBLIC_*` variables. No Supabase Auth setup is needed.
+The SQL connection password is different from a Supabase API secret. Uploads now
+also require `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a backend `sb_secret_...` key),
+and `SUPABASE_STORAGE_BUCKET=claimly-documents`. The bucket must remain private.
+Never put database credentials or secret keys in `NEXT_PUBLIC_*` variables.
+No Supabase Auth setup is needed.
 
 Missing/invalid database settings raise `ConfigurationError` when settings are
 requested; a failed connection raises `DatabaseConnectionError` with a sanitized

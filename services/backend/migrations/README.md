@@ -3,6 +3,10 @@
 These are ordered, manually applied PostgreSQL migrations for Supabase. They
 do not run on API startup. No live project was contacted during implementation.
 
+The upload feature adds `0003_upload_tracking.sql`, applied **after** 0001/0002.
+It adds two private operational tables for idempotency/upload recovery and rate
+limits. See [../UPLOADS.md](../UPLOADS.md) for setup, testing, and recovery.
+
 ## Apply later using Supabase SQL Editor
 
 1. Select the intended hackathon Supabase project in the dashboard.

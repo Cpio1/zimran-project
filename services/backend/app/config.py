@@ -4,6 +4,8 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from uuid import UUID
+from urllib.parse import urlsplit
+import re
 
 from dotenv import load_dotenv
 from psycopg.conninfo import conninfo_to_dict
@@ -54,4 +56,32 @@ def get_database_settings() -> DatabaseSettings:
         database_url=os.environ.get("DATABASE_URL", "").strip(),
         workspace_id=workspace_id,
         connect_timeout_seconds=timeout,
+    )
+
+
+@dataclass(frozen=True)
+class StorageSettings:
+    url: str
+    secret_key: str = field(repr=False)
+    bucket: str = "claimly-documents"
+
+    def __post_init__(self):
+        try:
+            parsed = urlsplit(self.url)
+        except ValueError:
+            raise ConfigurationError("SUPABASE_URL must be an HTTPS project origin.") from None
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.path not in ("", "/") or parsed.query or parsed.fragment:
+            raise ConfigurationError("SUPABASE_URL must be an HTTPS project origin.")
+        if not self.secret_key.startswith("sb_secret_") or any(c.isspace() for c in self.secret_key):
+            raise ConfigurationError("SUPABASE_SECRET_KEY must be a server-side Supabase secret key.")
+        if not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", self.bucket):
+            raise ConfigurationError("SUPABASE_STORAGE_BUCKET is invalid.")
+
+
+def get_storage_settings() -> StorageSettings:
+    load_dotenv(ENV_FILE, override=False)
+    return StorageSettings(
+        url=os.environ.get("SUPABASE_URL", "").strip(),
+        secret_key=os.environ.get("SUPABASE_SECRET_KEY", "").strip(),
+        bucket=os.environ.get("SUPABASE_STORAGE_BUCKET", "claimly-documents").strip(),
     )

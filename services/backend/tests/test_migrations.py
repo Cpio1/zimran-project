@@ -17,7 +17,7 @@ def test_migrations_parse_as_postgresql():
 
 
 def test_every_created_table_is_private_and_has_rls():
-    statements = parse_sql((MIGRATIONS / "0001_database_foundation.sql").read_text(encoding="utf-8"))
+    statements = parse_sql("\n".join(path.read_text(encoding="utf-8") for path in sorted(MIGRATIONS.glob("*.sql"))))
     tables = set()
     protected = set()
     for raw in statements:
